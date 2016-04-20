@@ -390,6 +390,21 @@ class AbelianTensor(TensorCommon):
             res.charge %= res.qodulus
         return res
 
+
+    def astype(self, dtype, casting='unsafe', copy=True):
+        if not np.can_cast(self.dtype, dtype, casting=casting):
+            raise ValueError("Cannot cast {} into {} with casting={}.".
+                             format(self.dtype, dtype, casting))
+        if copy:
+            res = self.copy()
+        else:
+            res = self
+        res.dtype = dtype
+        for k, v in res.sects.items():
+            res[k] = v.astype(dtype, casting=casting, subok=True, copy=False)
+        return res
+
+
     conjugate = conj
     sqrt = generate_unary_deferer(np.sqrt)
     sign = generate_unary_deferer(np.sign)
