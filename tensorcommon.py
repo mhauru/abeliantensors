@@ -275,7 +275,7 @@ class TensorCommon:
 
     def svd(self, a, b, chis=None, eps=0, print_errors=0,
             return_rel_err=False, break_degenerate=False, degeneracy_eps=1e-6,
-            norm_type="frobenius"):
+            norm_type="frobenius", truncation=False):
         """ Transpose indices a to be on one side of self, b on the
         other, and reshape self to a matrix. Then singular value
         decompose this matrix into U, S, V. Finally reshape the unitary
@@ -318,7 +318,8 @@ class TensorCommon:
                                            print_errors=print_errors,
                                            break_degenerate=break_degenerate,
                                            degeneracy_eps=degeneracy_eps,
-                                           norm_type=norm_type)
+                                           norm_type=norm_type,
+                                           truncation=truncation)
         del(self)
         U_dims = (transposed_shape[:len(a)], S.shape)
         V_dims = (S.shape, transposed_shape[len(a):])
@@ -373,7 +374,8 @@ class TensorCommon:
     def split(self, a, b, chis=None, eps=0, print_errors=0,
               return_rel_err=False, return_sings=False,
               break_degenerate=False, degeneracy_eps=1e-6,
-              norm_type="frobenius"):
+              norm_type="frobenius", truncation=False,
+              weight="both"):
         """ Split with SVD. Like SVD, but takes the square root of the
         singular values and multiplies both unitaries with it, so that
         the tensor is split into two parts. Values are returned as
@@ -386,11 +388,19 @@ class TensorCommon:
                               return_rel_err=return_rel_err,
                               break_degenerate=break_degenerate,
                               degeneracy_eps=degeneracy_eps,
-                              norm_type=norm_type)
+                              norm_type=norm_type,truncation=truncation)
         U, S, V = svd_result[0:3]
-        S_sqrt = S.sqrt()
-        U = U.multiply_diag(S_sqrt, -1, direction="right")
-        V = V.multiply_diag(S_sqrt, 0, direction="left")
+        weight = weight.strip().lower()
+        if weight in ("both", "split", "center", "centre", "c", "middle", "m"):
+            S_sqrt = S.sqrt()
+            U = U.multiply_diag(S_sqrt, -1, direction="right")
+            V = V.multiply_diag(S_sqrt, 0, direction="left")
+        elif weight in ("left", "l", "a", "u"):
+            U = U.multiply_diag(S, -1, direction="right")
+        elif weight in ("right", "r", "b", "v"):
+            V = V.multiply_diag(S, 0, direction="left")
+        else:
+            raise ValueError("Unknown value for weight: {}".format(weight))
         if return_sings:
             ret_val = U, S, V
         else:

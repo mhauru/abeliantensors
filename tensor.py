@@ -4,7 +4,7 @@ import itertools
 import operator
 from functools import reduce
 from tensors.tensorcommon import TensorCommon
-
+import scipy
 
 class Tensor(TensorCommon, np.ndarray):
     """ This class implements no new functionality beyond ndarrays, but
@@ -349,20 +349,31 @@ class Tensor(TensorCommon, np.ndarray):
 
     def matrix_svd(self, chis=None, eps=0, print_errors=0,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius"):
+                   norm_type="frobenius", truncation=False):
         chis = self.matrix_decomp_format_chis(chis, eps)
-        U, S, V = np.linalg.svd(self, full_matrices=False)
-        S = Tensor.from_ndarray(S)
-        # Truncate, if truncation dimensions are given.
-        chi, rel_err = type(self).find_trunc_dim(
-            S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type)
-        # Truncate
-        S = S[:chi]
-        U = U[:,:chi]
-        V = V[:chi,:]
-        if print_errors > 0:
-            print('Relative truncation error in SVD: %.3e' % rel_err)
-        return U, S, V, rel_err
+        if truncation==False:
+            U, S, V = np.linalg.svd(self, full_matrices=False)
+            S = Tensor.from_ndarray(S)
+            # Truncate, if truncation dimensions are given.
+            chi, rel_err = type(self).find_trunc_dim(
+                S, chis=chis, eps=eps, break_degenerate=break_degenerate,
+                degeneracy_eps=degeneracy_eps, norm_type=norm_type)
+            # Truncate
+            S = S[:chi]
+            U = U[:,:chi]
+            V = V[:chi,:]
+            if print_errors > 0:
+                print('Relative truncation error in SVD: %.3e' % rel_err)
+            return U, S, V, rel_err
+        else:
+            shape = min(self.shape)
+            if chis[0] < shape-1:
+                U,S,V = scipy.sparse.linalg.svds(self, k=chis[0], ncv=None, tol=0, which='LM', v0=None, maxiter=None, return_singular_vectors=True)
+            else:
+                U,S,V = np.linalg.svd(self, full_matrices=False)
+            U = Tensor.from_ndarray(U)
+            S = Tensor.from_ndarray(S)
+            V = Tensor.from_ndarray(V)
+            return U,S,V,0
 
 
