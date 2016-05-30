@@ -212,9 +212,7 @@ class TensorCommon:
         return self
 
 
-    def eig(self, a, b, chis=None, eps=0, print_errors=0,
-            return_rel_err=False, hermitian=False, break_degenerate=False,
-            degeneracy_eps=1e-6, norm_type="frobenius"):
+    def eig(self, a, b, *args, return_rel_err=False, **kwargs):
         """ Transpose indices a to be on one side of self, b on the
         other, and reshape self to a matrix. Then find the eigenvalues
         and eigenvectors of this matrix, and reshape the eigenvectors to
@@ -247,12 +245,7 @@ class TensorCommon:
             b = (b,)
         self, transposed_shape, transposed_qhape, transposed_dirs\
                 = self.to_matrix(a, b, return_transposed_shape_data=True)
-        S, U, rel_err = self.matrix_eig(chis=chis, eps=eps,
-                                        print_errors=print_errors,
-                                        hermitian=hermitian,
-                                        break_degenerate=break_degenerate,
-                                        degeneracy_eps=degeneracy_eps,
-                                        norm_type=norm_type)
+        S, U, rel_err = self.matrix_eig(*args, **kwargs)
         del(self)
 
         U_dims = (transposed_shape[:len(a)], S.shape)
@@ -273,9 +266,7 @@ class TensorCommon:
         return ret_val
 
 
-    def svd(self, a, b, chis=None, eps=0, print_errors=0,
-            return_rel_err=False, break_degenerate=False, degeneracy_eps=1e-6,
-            norm_type="frobenius", truncation=False):
+    def svd(self, a, b, *args, return_rel_err=False, **kwargs):
         """ Transpose indices a to be on one side of self, b on the
         other, and reshape self to a matrix. Then singular value
         decompose this matrix into U, S, V. Finally reshape the unitary
@@ -314,12 +305,7 @@ class TensorCommon:
         self, transposed_shape, transposed_qhape, transposed_dirs =\
                 self.to_matrix(a, b, return_transposed_shape_data=True)
 
-        U, S, V, rel_err = self.matrix_svd(chis=chis, eps=eps,
-                                           print_errors=print_errors,
-                                           break_degenerate=break_degenerate,
-                                           degeneracy_eps=degeneracy_eps,
-                                           norm_type=norm_type,
-                                           truncation=truncation)
+        U, S, V, rel_err = self.matrix_svd(*args, **kwargs)
         del(self)
         U_dims = (transposed_shape[:len(a)], S.shape)
         V_dims = (S.shape, transposed_shape[len(a):])
@@ -371,11 +357,8 @@ class TensorCommon:
         return chis
 
 
-    def split(self, a, b, chis=None, eps=0, print_errors=0,
-              return_rel_err=False, return_sings=False,
-              break_degenerate=False, degeneracy_eps=1e-6,
-              norm_type="frobenius", truncation=False,
-              weight="both"):
+    def split(self, a, b, *args, return_rel_err=False,
+              return_sings=False, weight="both", **kwargs):
         """ Split with SVD. Like SVD, but takes the square root of the
         singular values and multiplies both unitaries with it, so that
         the tensor is split into two parts. Values are returned as
@@ -383,12 +366,8 @@ class TensorCommon:
         where the ones in curly brackets are only returned if the
         corresponding arguments are True.
         """
-        svd_result = self.svd(a, b, chis=chis, eps=eps,
-                              print_errors=print_errors,
-                              return_rel_err=return_rel_err,
-                              break_degenerate=break_degenerate,
-                              degeneracy_eps=degeneracy_eps,
-                              norm_type=norm_type,truncation=truncation)
+        svd_result = self.svd(a, b, *args, return_rel_err=return_rel_err,
+                              **kwargs)
         U, S, V = svd_result[0:3]
         weight = weight.strip().lower()
         if weight in ("both", "split", "center", "centre", "c", "middle", "m"):

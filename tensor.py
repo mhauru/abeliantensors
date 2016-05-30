@@ -142,19 +142,25 @@ class Tensor(TensorCommon, np.ndarray):
 
     @classmethod
     def find_trunc_dim(cls, S, chis=None, eps=0, break_degenerate=False,
-                       degeneracy_eps=1e-6, norm_type="frobenius"):
+                       degeneracy_eps=1e-6, norm_type="frobenius",
+                       trunc_err_func=None):
         S = np.abs(S)
-        if norm_type=="frobenius":
-            S = S**2
-            eps = eps**2
-        elif norm_type=="trace":
-            pass
-        else:
-            raise ValueError("Unknown norm_type {}".format(norm_type))
-        sum_all = sum(S)
+        if trunc_err_func is None:
+            if norm_type=="frobenius":
+                def trunc_err_func(S, chi):
+                    sum_disc = sum(S[chi:]**2)
+                    err = np.sqrt(sum_disc/sum(S**2))
+                    return err
+            elif norm_type=="trace":
+                def trunc_err_func(S, chi):
+                    sum_disc = sum(S[chi:])
+                    err = sum_disc/sum(S)
+                    return err
+            else:
+                raise ValueError("Unknown norm_type {}".format(norm_type))
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
-        if sum_all != 0:
+        if sum(S) != 0:
             for chi in chis:
                 if not break_degenerate:
                     # Make sure that we don't break degenerate singular
@@ -167,16 +173,13 @@ class Tensor(TensorCommon, np.ndarray):
                             chi -= 1
                         else:
                             break
-                sum_disc = sum(S[chi:])
-                rel_err = sum_disc/sum_all
-                if rel_err <= eps:
+                err = trunc_err_func(S, chi)
+                if err <= eps:
                     break
-            if norm_type=="frobenius":
-                rel_err = np.sqrt(rel_err)
         else:
-            rel_err = 0
+            err = 0
             chi = min(chis)
-        return chi, rel_err
+        return chi, err
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # The meat: actual tensor operations
@@ -321,9 +324,10 @@ class Tensor(TensorCommon, np.ndarray):
             result = type(self).from_ndarray(result)
         return result
 
+
     def matrix_eig(self, chis=None, eps=0, print_errors=0, hermitian=False,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius"):
+                   norm_type="frobenius", trunc_err_func=None):
         chis = self.matrix_decomp_format_chis(chis, eps)
         if hermitian:
             S, U = np.linalg.eigh(self)
@@ -335,7 +339,8 @@ class Tensor(TensorCommon, np.ndarray):
         # Truncate, if truncation dimensions are given.
         chi, rel_err = type(self).find_trunc_dim(
             S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type)
+            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
+            trunc_err_func=trunc_err_func)
         # Truncate
         S = S[:chi]
         U = U[:,:chi]
@@ -347,9 +352,11 @@ class Tensor(TensorCommon, np.ndarray):
             U = type(self).from_ndarray(U)
         return S, U, rel_err
 
+
     def matrix_svd(self, chis=None, eps=0, print_errors=0,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius", truncation=False):
+                   norm_type="frobenius", truncation=False,
+                   trunc_err_func=None):
         chis = self.matrix_decomp_format_chis(chis, eps)
         if truncation==False:
             U, S, V = np.linalg.svd(self, full_matrices=False)
@@ -357,7 +364,8 @@ class Tensor(TensorCommon, np.ndarray):
             # Truncate, if truncation dimensions are given.
             chi, rel_err = type(self).find_trunc_dim(
                 S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-                degeneracy_eps=degeneracy_eps, norm_type=norm_type)
+                degeneracy_eps=degeneracy_eps, norm_type=norm_type,
+                trunc_err_func=trunc_err_func)
             # Truncate
             S = S[:chi]
             U = U[:,:chi]
@@ -374,6 +382,6 @@ class Tensor(TensorCommon, np.ndarray):
             U = Tensor.from_ndarray(U)
             S = Tensor.from_ndarray(S)
             V = Tensor.from_ndarray(V)
-            return U,S,V,0
+            return U, S, V, 0
 
 
