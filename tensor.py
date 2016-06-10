@@ -97,6 +97,9 @@ class Tensor(TensorCommon, np.ndarray):
     def imag(self):
         return super(Tensor, self).imag
 
+    def sum(self):
+        return super(Tensor, self).sum().value()
+
 
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -376,7 +379,11 @@ class Tensor(TensorCommon, np.ndarray):
         else:
             shape = min(self.shape)
             if chis[0] < shape-1:
-                U,S,V = scipy.sparse.linalg.svds(self, k=chis[0], ncv=None, tol=0, which='LM', v0=None, maxiter=None, return_singular_vectors=True)
+                U,S,V = scipy.sparse.linalg.svds(self, k=chis[0],
+                                                 ncv=None, tol=0,
+                                                 which='LM', v0=None,
+                                                 maxiter=None,
+                                                 return_singular_vectors=True)
             else:
                 U,S,V = np.linalg.svd(self, full_matrices=False)
             U = Tensor.from_ndarray(U)
