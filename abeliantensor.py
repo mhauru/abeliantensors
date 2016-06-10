@@ -949,18 +949,26 @@ class AbelianTensor(TensorCommon):
     @classmethod
     def find_trunc_dim(cls, S, S_sects, minusabs_next_els, dims,
                        chis=None, eps=0, break_degenerate=False,
-                       degeneracy_eps=1e-6, norm_type="frobenius"):
+                       degeneracy_eps=1e-6, norm_type="frobenius",
+                       trunc_err_func=None):
         # First, find what chi will be.
         S = -np.sort(-np.abs(S))
-        if norm_type=="frobenius":
-            S = S**2
-            eps = eps**2
-        elif norm_type=="trace":
-            pass
-        else:
-            raise ValueError("Unknown norm_type {}".format(norm_type))
-        sum_all = np.sum(S)
-        if sum_all != 0:
+        if trunc_err_func is None:
+            if norm_type=="frobenius":
+                def trunc_err_func(S, chi):
+                    sum_disc = sum(S[chi:]**2)
+                    err = np.sqrt(sum_disc/sum(S**2))
+                    return err
+            elif norm_type=="trace":
+                def trunc_err_func(S, chi):
+                    sum_disc = sum(S[chi:])
+                    err = sum_disc/sum(S)
+                    return err
+            else:
+                raise ValueError("Unknown norm_type {}".format(norm_type))
+        # Find the smallest chi for which the error is small enough.
+        # If none is found, use the largest chi.
+        if sum(S) != 0:
             for chi in chis:
                 if not break_degenerate:
                     # Make sure that we don't break degenerate singular
@@ -973,14 +981,11 @@ class AbelianTensor(TensorCommon):
                             chi -= 1
                         else:
                             break
-                sum_disc = sum(S[chi:])
-                rel_err = sum_disc/sum_all
-                if rel_err <= eps:
+                err = trunc_err_func(S, chi)
+                if err <= eps:
                     break
-            if norm_type=="frobenius":
-                rel_err = np.sqrt(rel_err)
         else:
-            rel_err = 0
+            err = 0
             chi = min(chis)
         # Find out which eigenvalues to keep.
         dim_sum = 0
@@ -999,7 +1004,7 @@ class AbelianTensor(TensorCommon):
                 next_el = this_key_els[dims[key]]
                 heapq.heappush(minusabs_next_els, (-np.abs(next_el), key))
             dim_sum += 1
-        return chi, dims, rel_err
+        return chi, dims, err
 
         
 
@@ -1624,7 +1629,7 @@ class AbelianTensor(TensorCommon):
 
     def matrix_eig(self, chis=None, eps=0, print_errors=0, hermitian=False,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius"):
+                   norm_type="frobenius", trunc_err_func=None):
         """ Find eigenvalues and eigenvectors of a matrix. The input
         must have defval == 0, invar == True, charge == 0 and must be
         square in the sense that the dimensions must have the same qim
@@ -1672,7 +1677,7 @@ class AbelianTensor(TensorCommon):
                 m = min(shp)
                 u = np.empty((shp[0], m), dtype=U_dtype)
                 s = np.empty((m,), dtype=S_dtype)
-                eigdecomp = (u, s)
+                eigdecomp = (u, s)  #TODO is that a bug?
             eigdecomps[k] = eigdecomp
             dims[k] = 0
             all_eigs.append(s)
@@ -1688,7 +1693,9 @@ class AbelianTensor(TensorCommon):
         chi, dims, rel_err = type(self).find_trunc_dim(
             all_eigs, eigdecomps, minusabs_next_eigs, dims,
             chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type)
+            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
+            trunc_err_func=trunc_err_func
+        )
 
         if print_errors > 0:
             print('Relative truncation error in eig: '
@@ -1729,7 +1736,8 @@ class AbelianTensor(TensorCommon):
 
     def matrix_svd(self, chis=None, eps=0, print_errors=0,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius"):
+                   norm_type="frobenius", truncation=False,
+                   trunc_err_func=None):
         """ SVD a matrix. The matrix must have invar == True and defval
         == 0.
 
@@ -1774,6 +1782,12 @@ class AbelianTensor(TensorCommon):
         else:
             qod_func = lambda x: x % self.qodulus
 
+        if truncation:
+            # TODO
+            raise NotImplementedError(
+                "truncation = True not implemented for AbelianTensor"
+            )
+
         svds = {}
         dims = {}
         minus_next_sings = []
@@ -1804,7 +1818,9 @@ class AbelianTensor(TensorCommon):
         chi, dims, rel_err = type(self).find_trunc_dim(
             all_sings, svds, minus_next_sings, dims,
             chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type)
+            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
+            trunc_err_func=trunc_err_func
+        )
 
         if print_errors > 0:
             print('Relative truncation error in SVD: %.3e' % rel_err)
