@@ -286,10 +286,6 @@ class TensorCommon:
         If return_rel_err is True then the relative truncation error is
         also returned.
 
-        norm_type specifies the norm used to measure the error. This
-        defaults to "frobenius". The other option is "trace", for trace
-        norm.
-        
         Output is U, S, V, and possibly rel_err.  Here S is a vector of
         singular values and U and V are isometric tensors (unitary if
         the matrix that is SVDed is square and there is no truncation).

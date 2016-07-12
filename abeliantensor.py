@@ -5,6 +5,7 @@ import heapq
 import warnings
 from functools import reduce
 import operator
+import scipy.sparse.linalg as spsla
 from copy import deepcopy
 from tensors.tensorcommon import TensorCommon
 
@@ -949,23 +950,19 @@ class AbelianTensor(TensorCommon):
     @classmethod
     def find_trunc_dim(cls, S, S_sects, minusabs_next_els, dims,
                        chis=None, eps=0, break_degenerate=False,
-                       degeneracy_eps=1e-6, norm_type="frobenius",
-                       trunc_err_func=None):
+                       degeneracy_eps=1e-6, trunc_err_func=None, norm_sq=None):
         # First, find what chi will be.
         S = -np.sort(-np.abs(S))
+        if norm_sq is None:
+            # The user may provide this if the given S has been
+            # pretruncated already.
+            norm_sq = sum(S**2)
         if trunc_err_func is None:
-            if norm_type=="frobenius":
-                def trunc_err_func(S, chi):
-                    sum_disc = sum(S[chi:]**2)
-                    err = np.sqrt(sum_disc/sum(S**2))
-                    return err
-            elif norm_type=="trace":
-                def trunc_err_func(S, chi):
-                    sum_disc = sum(S[chi:])
-                    err = sum_disc/sum(S)
-                    return err
-            else:
-                raise ValueError("Unknown norm_type {}".format(norm_type))
+            def trunc_err_func(S, chi):
+                sum_kept = sum(S[:chi]**2)
+                # DEBUG
+                err = np.sqrt(np.abs(1 - sum_kept/norm_sq))
+                return err
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
@@ -1629,7 +1626,7 @@ class AbelianTensor(TensorCommon):
 
     def matrix_eig(self, chis=None, eps=0, print_errors=0, hermitian=False,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius", trunc_err_func=None):
+                   sparse=False, trunc_err_func=None):
         """ Find eigenvalues and eigenvectors of a matrix. The input
         must have defval == 0, invar == True, charge == 0 and must be
         square in the sense that the dimensions must have the same qim
@@ -1644,7 +1641,7 @@ class AbelianTensor(TensorCommon):
         eigenvectors. Both have the same dim and qim as self.
         """
         chis = self.matrix_decomp_format_chis(chis, eps)
-        np_func = np.linalg.eigh if hermitian else np.linalg.eig
+        maxchi = max(chis)
         assert(self.defval == 0)
         assert(self.invar)
         assert(self.charge == 0)
@@ -1665,7 +1662,18 @@ class AbelianTensor(TensorCommon):
         all_eigs = []
         for k,v in self.sects.items():
             if 0 not in v.shape:
-                s, u = np_func(v)
+                if sparse and maxchi < min(v.shape) - 1:
+                    if hermitian:
+                        s, u = spsla.eighs(v, k=maxchi,
+                                           return_eigenvectors=True)
+                    else:
+                        s, u = spsla.eigs(v, k=maxchi,
+                                          return_eigenvectors=True)
+                else:
+                    if hermitian:
+                        s, u = np.linalg.eigh(v)
+                    else:
+                        s, u = np.linalg.eig(v)
                 order = np.argsort(-np.abs(s))
                 s = s[order]
                 u = u[:,order]
@@ -1689,12 +1697,16 @@ class AbelianTensor(TensorCommon):
             # all_eigs == []
             all_eigs = np.array((0,))
         
+        if sparse:
+            norm_sq = self.norm_sq()
+        else:
+            norm_sq = None
         # Truncate, if truncation dimensions are given.
         chi, dims, rel_err = type(self).find_trunc_dim(
             all_eigs, eigdecomps, minusabs_next_eigs, dims,
             chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
-            trunc_err_func=trunc_err_func
+            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq
         )
 
         if print_errors > 0:
@@ -1736,8 +1748,7 @@ class AbelianTensor(TensorCommon):
 
     def matrix_svd(self, chis=None, eps=0, print_errors=0,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius", truncation=False,
-                   trunc_err_func=None):
+                   sparse=False, trunc_err_func=None):
         """ SVD a matrix. The matrix must have invar == True and defval
         == 0.
 
@@ -1762,10 +1773,6 @@ class AbelianTensor(TensorCommon):
 
         If print_errors > 0 truncation error is printed.
 
-        norm_type specifies the norm used to measure the error. This
-        defaults to "frobenius". The other option is "trace", for trace
-        norm.
-
         The method returns the tuple U, S, V, rel_err, where S is a
         non-invariant vector and U and V are unitary matrices. They are
         such that U.diag(S).V = self, where the equality is appromixate
@@ -1775,6 +1782,7 @@ class AbelianTensor(TensorCommon):
         relative Frobenius norm error caused by the truncation.
         """
         chis = self.matrix_decomp_format_chis(chis, eps)
+        maxchi = max(chis)
         assert(self.defval == 0)
         assert(self.invar)
         if self.qodulus is None:
@@ -1782,19 +1790,17 @@ class AbelianTensor(TensorCommon):
         else:
             qod_func = lambda x: x % self.qodulus
 
-        if truncation:
-            # TODO
-            raise NotImplementedError(
-                "truncation = True not implemented for AbelianTensor"
-            )
-
         svds = {}
         dims = {}
         minus_next_sings = []
         all_sings = []
         for k,v in self.sects.items():
             if 0 not in v.shape:
-                u, s, v = np.linalg.svd(v, full_matrices=False)
+                if sparse and maxchi < min(v.shape) - 1:
+                    u, s, v = spsla.svds(v, k=maxchi,
+                                         return_singular_vectors=True)
+                else:
+                    u, s, v = np.linalg.svd(v, full_matrices=False)
             else:
                 shp = v.shape
                 m = min(shp)
@@ -1814,12 +1820,16 @@ class AbelianTensor(TensorCommon):
             # all_sings == []
             all_sings = np.array((0,))
         
+        if sparse:
+            norm_sq = self.norm_sq()
+        else:
+            norm_sq = None
         # Truncate, if truncation dimensions are given.
         chi, dims, rel_err = type(self).find_trunc_dim(
             all_sings, svds, minus_next_sings, dims,
             chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
-            trunc_err_func=trunc_err_func
+            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq
         )
 
         if print_errors > 0:

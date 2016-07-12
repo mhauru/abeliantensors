@@ -2,9 +2,9 @@ import numpy as np
 import collections
 import itertools
 import operator
+import scipy.sparse.linalg as spsla
 from functools import reduce
 from tensors.tensorcommon import TensorCommon
-import scipy
 
 class Tensor(TensorCommon, np.ndarray):
     """ This class implements no new functionality beyond ndarrays, but
@@ -145,22 +145,18 @@ class Tensor(TensorCommon, np.ndarray):
 
     @classmethod
     def find_trunc_dim(cls, S, chis=None, eps=0, break_degenerate=False,
-                       degeneracy_eps=1e-6, norm_type="frobenius",
-                       trunc_err_func=None):
+                       degeneracy_eps=1e-6, trunc_err_func=None,
+                       norm_sq=None):
         S = np.abs(S)
+        if norm_sq is None:
+            # The user may provide this if the given S has been
+            # pretruncated already.
+            norm_sq = sum(S**2)
         if trunc_err_func is None:
-            if norm_type=="frobenius":
-                def trunc_err_func(S, chi):
-                    sum_disc = sum(S[chi:]**2)
-                    err = np.sqrt(sum_disc/sum(S**2))
-                    return err
-            elif norm_type=="trace":
-                def trunc_err_func(S, chi):
-                    sum_disc = sum(S[chi:])
-                    err = sum_disc/sum(S)
-                    return err
-            else:
-                raise ValueError("Unknown norm_type {}".format(norm_type))
+            def trunc_err_func(S, chi):
+                sum_kept = sum(S[:chi]**2)
+                err = np.sqrt(np.abs(1-sum_kept/norm_sq))
+                return err
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
@@ -330,20 +326,30 @@ class Tensor(TensorCommon, np.ndarray):
 
     def matrix_eig(self, chis=None, eps=0, print_errors=0, hermitian=False,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius", trunc_err_func=None):
+                   sparse=False, trunc_err_func=None):
         chis = self.matrix_decomp_format_chis(chis, eps)
-        if hermitian:
-            S, U = np.linalg.eigh(self)
+        mindim = min(self.shape)
+        maxchi = max(chis)
+        if sparse and maxchi < mindim - 1:
+            if hermitian:
+                S, U = spsla.eigsh(self, k=maxchi, return_eigenvectors=True)
+            else:
+                S, U = spsla.eigs(self, k=maxchi, return_eigenvectors=True)
+            norm_sq = self.norm_sq()
         else:
-            S, U = np.linalg.eig(self)
+            if hermitian:
+                S, U = np.linalg.eigh(self)
+            else:
+                S, U = np.linalg.eig(self)
+            norm_sq = None
         order = np.argsort(-np.abs(S))
         S = S[order]
         U = U[:,order]
         # Truncate, if truncation dimensions are given.
         chi, rel_err = type(self).find_trunc_dim(
             S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, norm_type=norm_type,
-            trunc_err_func=trunc_err_func)
+            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq)
         # Truncate
         S = S[:chi]
         U = U[:,:chi]
@@ -358,37 +364,32 @@ class Tensor(TensorCommon, np.ndarray):
 
     def matrix_svd(self, chis=None, eps=0, print_errors=0,
                    break_degenerate=False, degeneracy_eps=1e-6,
-                   norm_type="frobenius", truncation=False,
-                   trunc_err_func=None):
+                   sparse=False, trunc_err_func=None):
         chis = self.matrix_decomp_format_chis(chis, eps)
-        if truncation==False:
-            U, S, V = np.linalg.svd(self, full_matrices=False)
-            S = Tensor.from_ndarray(S)
-            # Truncate, if truncation dimensions are given.
-            chi, rel_err = type(self).find_trunc_dim(
-                S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-                degeneracy_eps=degeneracy_eps, norm_type=norm_type,
-                trunc_err_func=trunc_err_func)
-            # Truncate
-            S = S[:chi]
-            U = U[:,:chi]
-            V = V[:chi,:]
-            if print_errors > 0:
-                print('Relative truncation error in SVD: %.3e' % rel_err)
-            return U, S, V, rel_err
+        mindim = min(self.shape)
+        maxchi = max(chis)
+        if sparse and maxchi < mindim - 1:
+            U, S, V = spsla.svds(self, k=maxchi,
+                                 return_singular_vectors=True)
+            norm_sq = self.norm_sq()
         else:
-            shape = min(self.shape)
-            if chis[0] < shape-1:
-                U,S,V = scipy.sparse.linalg.svds(self, k=chis[0],
-                                                 ncv=None, tol=0,
-                                                 which='LM', v0=None,
-                                                 maxiter=None,
-                                                 return_singular_vectors=True)
-            else:
-                U,S,V = np.linalg.svd(self, full_matrices=False)
-            U = Tensor.from_ndarray(U)
-            S = Tensor.from_ndarray(S)
-            V = Tensor.from_ndarray(V)
-            return U, S, V, 0
-
+            U, S, V = np.linalg.svd(self, full_matrices=False)
+            norm_sq = None
+        S = Tensor.from_ndarray(S)
+        # Truncate, if truncation dimensions are given.
+        chi, rel_err = type(self).find_trunc_dim(
+            S, chis=chis, eps=eps, break_degenerate=break_degenerate,
+            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq)
+        # Truncate
+        S = S[:chi]
+        U = U[:,:chi]
+        V = V[:chi,:]
+        if print_errors > 0:
+            print('Relative truncation error in SVD: %.3e' % rel_err)
+        if not isinstance(U, TensorCommon):
+            U = type(self).from_ndarray(U)
+        if not isinstance(V, TensorCommon):
+            V = type(self).from_ndarray(V)
+        return U, S, V, rel_err
 
