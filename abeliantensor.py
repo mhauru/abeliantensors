@@ -960,36 +960,35 @@ class AbelianTensor(TensorCommon):
         if trunc_err_func is None:
             def trunc_err_func(S, chi):
                 sum_kept = sum(S[:chi]**2)
-                # DEBUG
                 err = np.sqrt(np.abs(1 - sum_kept/norm_sq))
                 return err
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
+            last_out = S[0]
             for chi in chis:
                 if not break_degenerate:
                     # Make sure that we don't break degenerate singular
                     # values by including one but not the other.
                     while 0 < chi < len(S):
-                        last_eig_in = S[chi-1]
-                        last_eig_out = S[chi]
-                        rel_diff = np.abs(last_eig_in-last_eig_out)/last_eig_in
+                        last_in = S[chi-1]
+                        last_out = S[chi]
+                        rel_diff = np.abs(last_in-last_out)/last_in
                         if rel_diff < degeneracy_eps:
                             chi -= 1
                         else:
                             break
                 err = trunc_err_func(S, chi)
-                if err <= eps:
+                if err <= eps or last_out==0.:
                     break
         else:
             err = 0
             chi = min(chis)
-        # Find out which eigenvalues to keep.
+
+        # Find out which values to keep, i.e. how to distribute chi in
+        # the different blocks.
         dim_sum = 0
         while(dim_sum < chi):
-            # index_to_add is the index of the block which has
-            # the largest eigenvalue that is not yet
-            # included in truncation.
             try:
                 minusabs_el_to_add, key = heapq.heappop(minusabs_next_els)
             except IndexError:
@@ -1799,6 +1798,10 @@ class AbelianTensor(TensorCommon):
                 if sparse and maxchi < min(v.shape) - 1:
                     u, s, v = spsla.svds(v, k=maxchi,
                                          return_singular_vectors=True)
+                    order = np.argsort(-s)
+                    u = u[:, order]
+                    s = s[order]
+                    v = v[order, :]
                 else:
                     u, s, v = np.linalg.svd(v, full_matrices=False)
             else:

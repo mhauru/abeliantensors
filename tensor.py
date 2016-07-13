@@ -160,6 +160,7 @@ class Tensor(TensorCommon, np.ndarray):
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
+            last_out = S[0]
             for chi in chis:
                 if not break_degenerate:
                     # Make sure that we don't break degenerate singular
@@ -173,7 +174,7 @@ class Tensor(TensorCommon, np.ndarray):
                         else:
                             break
                 err = trunc_err_func(S, chi)
-                if err <= eps:
+                if err <= eps or last_out==0.:
                     break
         else:
             err = 0
