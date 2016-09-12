@@ -154,8 +154,8 @@ class Tensor(TensorCommon, np.ndarray):
             norm_sq = sum(S**2)
         if trunc_err_func is None:
             def trunc_err_func(S, chi):
-                sum_kept = sum(S[:chi]**2)
-                err = np.sqrt(np.abs(1-sum_kept/norm_sq))
+                sum_disc = sum(S[chi:]**2)
+                err = np.sqrt(sum_disc/norm_sq)
                 return err
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
