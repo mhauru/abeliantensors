@@ -1,10 +1,10 @@
 import numpy as np
 import collections
-import itertools
 import heapq
 import warnings
-from functools import reduce
-import operator
+import itertools as itt
+import functools as fct
+import operator as opr
 import scipy.sparse.linalg as spsla
 from copy import deepcopy
 from tensors.tensorcommon import TensorCommon
@@ -238,8 +238,8 @@ class AbelianTensor(TensorCommon):
             pass
         res = cls(shape, **opt_args)
 
-        dimcombs = itertools.product(*tuple(shape))
-        qimcombs = itertools.product(*tuple(qhape))
+        dimcombs = itt.product(*tuple(shape))
+        qimcombs = itt.product(*tuple(qhape))
         if shape:
             for qcomb, dcomb in zip(qimcombs, dimcombs):
                 if res.is_valid_key(qcomb):
@@ -335,57 +335,57 @@ class AbelianTensor(TensorCommon):
             r += "\n%s:\n%s"%(k,v)
         return r
 
-    __add__ = generate_binary_deferer(operator.add)
-    __sub__ = generate_binary_deferer(operator.sub)
-    __mul__ = generate_binary_deferer(operator.mul)
-    __truediv__ = generate_binary_deferer(operator.truediv)
-    __floordiv__ = generate_binary_deferer(operator.floordiv)
-    __mod__ = generate_binary_deferer(operator.mod)
+    __add__ = generate_binary_deferer(opr.add)
+    __sub__ = generate_binary_deferer(opr.sub)
+    __mul__ = generate_binary_deferer(opr.mul)
+    __truediv__ = generate_binary_deferer(opr.truediv)
+    __floordiv__ = generate_binary_deferer(opr.floordiv)
+    __mod__ = generate_binary_deferer(opr.mod)
     __divmod__ = generate_binary_deferer(divmod)
     __pow__ = generate_binary_deferer(pow)
-    __lshift__ = generate_binary_deferer(operator.lshift)
-    __rshift__ = generate_binary_deferer(operator.rshift)
-    __and__ = generate_binary_deferer(operator.and_)
-    __xor__ = generate_binary_deferer(operator.xor)
-    __or__ = generate_binary_deferer(operator.or_)
+    __lshift__ = generate_binary_deferer(opr.lshift)
+    __rshift__ = generate_binary_deferer(opr.rshift)
+    __and__ = generate_binary_deferer(opr.and_)
+    __xor__ = generate_binary_deferer(opr.xor)
+    __or__ = generate_binary_deferer(opr.or_)
 
     def arg_swapper(op):
         def res(a,b, *args, **kwargs):
             return op(b,a, *args, **kwargs)
         return res
 
-    __radd__ = generate_binary_deferer(arg_swapper(operator.add))
-    __rsub__ = generate_binary_deferer(arg_swapper(operator.sub))
-    __rmul__ = generate_binary_deferer(arg_swapper(operator.mul))
-    __rtruediv__ = generate_binary_deferer(arg_swapper(operator.truediv))
-    __rfloordiv__ = generate_binary_deferer(arg_swapper(operator.floordiv))
-    __rmod__ = generate_binary_deferer(arg_swapper(operator.mod))
+    __radd__ = generate_binary_deferer(arg_swapper(opr.add))
+    __rsub__ = generate_binary_deferer(arg_swapper(opr.sub))
+    __rmul__ = generate_binary_deferer(arg_swapper(opr.mul))
+    __rtruediv__ = generate_binary_deferer(arg_swapper(opr.truediv))
+    __rfloordiv__ = generate_binary_deferer(arg_swapper(opr.floordiv))
+    __rmod__ = generate_binary_deferer(arg_swapper(opr.mod))
     __rdivmod__ = generate_binary_deferer(arg_swapper(divmod))
     __rpow__ = generate_binary_deferer(arg_swapper(pow))
-    __rlshift__ = generate_binary_deferer(arg_swapper(operator.lshift))
-    __rrshift__ = generate_binary_deferer(arg_swapper(operator.rshift))
-    __rand__ = generate_binary_deferer(arg_swapper(operator.and_))
-    __rxor__ = generate_binary_deferer(arg_swapper(operator.xor))
-    __ror__ = generate_binary_deferer(arg_swapper(operator.or_))
+    __rlshift__ = generate_binary_deferer(arg_swapper(opr.lshift))
+    __rrshift__ = generate_binary_deferer(arg_swapper(opr.rshift))
+    __rand__ = generate_binary_deferer(arg_swapper(opr.and_))
+    __rxor__ = generate_binary_deferer(arg_swapper(opr.xor))
+    __ror__ = generate_binary_deferer(arg_swapper(opr.or_))
 
-    __eq__ = generate_binary_deferer(operator.eq)
-    __ne__ = generate_binary_deferer(operator.ne)
-    __lt__ = generate_binary_deferer(operator.lt)
-    __le__ = generate_binary_deferer(operator.le)
-    __gt__ = generate_binary_deferer(operator.gt)
-    __ge__ = generate_binary_deferer(operator.ge)
+    __eq__ = generate_binary_deferer(opr.eq)
+    __ne__ = generate_binary_deferer(opr.ne)
+    __lt__ = generate_binary_deferer(opr.lt)
+    __le__ = generate_binary_deferer(opr.le)
+    __gt__ = generate_binary_deferer(opr.gt)
+    __ge__ = generate_binary_deferer(opr.ge)
 
-    __neg__ = generate_unary_deferer(operator.neg)
-    __pos__ = generate_unary_deferer(operator.pos)
+    __neg__ = generate_unary_deferer(opr.neg)
+    __pos__ = generate_unary_deferer(opr.pos)
     __abs__ = generate_unary_deferer(abs)
-    __invert__ = generate_unary_deferer(operator.invert)
+    __invert__ = generate_unary_deferer(opr.invert)
 
     def conj(self):
         """ Conjugation complex conjugates, flips the directions of
         all the indices and flips the sign of the charge.
         """
         res = self.defer_unary_elementwise(np.conj)
-        res.dirs = list(map(operator.neg, res.dirs))
+        res.dirs = list(map(opr.neg, res.dirs))
         res.charge = -res.charge
         if self.qodulus is not None:
             res.charge %= res.qodulus
@@ -472,7 +472,7 @@ class AbelianTensor(TensorCommon):
                 warnings.warn("Binary operation called on non-scalar tensors "
                               "with differing charges (%i and %i)."
                               %(self.charge, B.charge), stacklevel=3)
-            relative_dirs = tuple(map(operator.mul, self.dirs, B.dirs))
+            relative_dirs = tuple(map(opr.mul, self.dirs, B.dirs))
             for i, d in enumerate(relative_dirs):
                 if d != 1:
                     warnings.warn("Automatically flipping dir %i in binary "
@@ -533,7 +533,7 @@ class AbelianTensor(TensorCommon):
         assert(type(self).check_form_match(tensor1=self, tensor2=B))
         assert(self.qodulus == B.qodulus)
         # They may have different dirs, but this generates a warning.
-        relative_dirs = tuple(map(operator.mul, self.dirs, B.dirs))
+        relative_dirs = tuple(map(opr.mul, self.dirs, B.dirs))
         for i, d in enumerate(relative_dirs):
             if d != 1:
                 warnings.warn("Automatically flipping dir %i in binary "
@@ -592,7 +592,7 @@ class AbelianTensor(TensorCommon):
     def average(self):
         s = self.sum()
         flat_shape = self.flatten_shape(self.shape)
-        num_of_elements = reduce(operator.mul, flat_shape, 1)
+        num_of_elements = fct.reduce(opr.mul, flat_shape, 1)
         average = s/num_of_elements
         return average
 
@@ -721,7 +721,7 @@ class AbelianTensor(TensorCommon):
                 r.append((prv, nxt))
                 prv = nxt
             ranges.append(r)
-        for k in itertools.product(*res.qhape):
+        for k in itt.product(*res.qhape):
             if res.is_valid_key(k):
                 slc = ()
                 for i, qnum in enumerate(k):
@@ -744,7 +744,7 @@ class AbelianTensor(TensorCommon):
             return True
         if len(key) != len(self.qhape):
             return False
-        key = map(operator.mul, self.dirs, key)
+        key = map(opr.mul, self.dirs, key)
         s = sum(key)
         if self.qodulus is not None:
             s %= self.qodulus
@@ -852,9 +852,9 @@ class AbelianTensor(TensorCommon):
         """ Returns True if the elements in self.sects cover all the
         elements in self.
         """
-        elements_in_sects = sum(map(operator.attrgetter("size"),
+        elements_in_sects = sum(map(opr.attrgetter("size"),
                                     self.sects.values()))
-        elements_in_total = reduce(operator.mul,
+        elements_in_total = fct.reduce(opr.mul,
                                    type(self).flatten_shape(self.shape),
                                    1)
         res = elements_in_sects >= elements_in_total
@@ -958,10 +958,8 @@ class AbelianTensor(TensorCommon):
             # pretruncated already.
             norm_sq = sum(S**2)
         if trunc_err_func is None:
-            def trunc_err_func(S, chi):
-                sum_disc = sum(S[chi:]**2)
-                err = np.sqrt(sum_disc/norm_sq)
-                return err
+            trunc_err_func = fct.partial(cls.default_trunc_err_func,
+                                         norm_sq=norm_sq)
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
@@ -973,7 +971,10 @@ class AbelianTensor(TensorCommon):
                     while 0 < chi < len(S):
                         last_in = S[chi-1]
                         last_out = S[chi]
-                        rel_diff = np.abs(last_in-last_out)/last_in
+                        rel_diff = np.abs(last_in-last_out)
+                        avrg = (last_in + last_out)/2
+                        if avrg != 0:
+                            rel_diff /= avrg
                         if rel_diff < degeneracy_eps:
                             chi -= 1
                         else:
@@ -1066,7 +1067,7 @@ class AbelianTensor(TensorCommon):
         joined = set(sum(index_batches, []))
         not_joined = [[i] for i in range(len(self.shape)) if i not in joined]
         all_batches = not_joined + index_batches_with_dirs
-        all_batches.sort(key=operator.itemgetter(0))
+        all_batches.sort(key=opr.itemgetter(0))
         # The a[:-1] conditional statement leaves out the dirs when
         # creating the permutation.
         p = sum((a[:-1] if len(a)>1 else a for a in all_batches), [])
@@ -1124,7 +1125,7 @@ class AbelianTensor(TensorCommon):
             qod_func = lambda x: x % res.qodulus
         # Go through every valid index in stead of every key in sects,
         # because blocks of zeros may be concatenated with other blocks.
-        valid_ks = (qcomb for qcomb in itertools.product(*res.qhape)
+        valid_ks = (qcomb for qcomb in itt.product(*res.qhape)
                     if res.is_valid_key(qcomb))
         del_slcs = [slice(b[1], b[-1]+1) for b in index_batches]
         get_slcs = [slice(b[0], b[-1]+1) for b in index_batches]
@@ -1138,11 +1139,11 @@ class AbelianTensor(TensorCommon):
                     zip(index_batches, dir_batches, dirs, del_slcs, get_slcs):
                 k_part = k[get_slc]
                 k_parts.append(k_part)
-                k_part = map(operator.mul, k_part, dir_b)
+                k_part = map(opr.mul, k_part, dir_b)
                 new_qnum = qod_func(sum(k_part) * dir_new)
                 new_k[b[0]] = new_qnum
                 del(new_k[del_slc])
-                new_shp[b[0]] = reduce(operator.mul, v.shape[get_slc])
+                new_shp[b[0]] = fct.reduce(opr.mul, v.shape[get_slc])
                 del(new_shp[del_slc])
             k_parts.reverse()
             new_k = tuple(new_k)
@@ -1157,7 +1158,7 @@ class AbelianTensor(TensorCommon):
                 l = [el[-1] for el in l]
             else:
                 l = [tuple(g)
-                     for k,g in itertools.groupby(l, operator.itemgetter(i))]
+                     for k,g in itt.groupby(l, opr.itemgetter(i))]
                 l = tuple(map(lambda k: concatenator(k, i=i+1), l))
             return np.concatenate(l, new_inds[i])
 
@@ -1169,13 +1170,13 @@ class AbelianTensor(TensorCommon):
 
         # Compute the new shape, qhape and dir.
         for new_d, batch in zip(dirs, index_batches):
-            product_of_tuple = lambda l: reduce(operator.mul, l)
-            cart_prod_of_dims = itertools.product(*tuple(res.shape[i]
+            product_of_tuple = lambda l: fct.reduce(opr.mul, l)
+            cart_prod_of_dims = itt.product(*tuple(res.shape[i]
                                                          for i in batch))
             new_dim = list(map(product_of_tuple, cart_prod_of_dims))
 
             qhps = ([q * res.dirs[i] for q in res.qhape[i]] for i in batch)
-            cartesian_product_of_qims = itertools.product(*tuple(qhps))
+            cartesian_product_of_qims = itt.product(*tuple(qhps))
             new_qim = map(sum, cartesian_product_of_qims)
             new_qim = (q*new_d for q in new_qim)
             new_qim = list(map(qod_func, new_qim))
@@ -1292,10 +1293,10 @@ class AbelianTensor(TensorCommon):
         for ind, dims, qims, dir_batch in zip(indices, dim_batches,
                                               qim_batches, dir_batches):
             # Find combinations of qims that give the right qnum
-            dimcombs = itertools.product(*dims)
-            qimcombs = itertools.product(*qims)
+            dimcombs = itt.product(*dims)
+            qimcombs = itt.product(*qims)
             for qcomb, dcomb in zip(qimcombs, dimcombs):
-                qcomb_flipped = tuple(map(operator.mul, qcomb, dir_batch))
+                qcomb_flipped = tuple(map(opr.mul, qcomb, dir_batch))
                 qnum = qod_func(sum(qcomb_flipped)*self.dirs[ind])
                 if self.qodulus is not None:
                     qnum %= self.qodulus
@@ -1310,7 +1311,7 @@ class AbelianTensor(TensorCommon):
             v = sorted(v)
             cumulant = 0
             for i, el in enumerate(v):
-                prod = reduce(operator.mul, el[1])
+                prod = fct.reduce(opr.mul, el[1])
                 v[i] += ((cumulant, cumulant + prod),)
                 cumulant += prod
             split_data[k] = v
@@ -1325,7 +1326,7 @@ class AbelianTensor(TensorCommon):
             # We then take the cartesian product of these datas over the
             # indices being split. That is, every member of the product
             # corresponds to one of the indices.
-            for p in itertools.product(*datas):
+            for p in itt.product(*datas):
                 # p is a tuple of lists, one list for each ind, where
                 # each list consists of three tuples: a qcomb, a dcomb
                 # and a cumdim. For each p there will be a block in the

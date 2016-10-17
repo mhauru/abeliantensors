@@ -1,7 +1,7 @@
 import numpy as np
 import collections
-import itertools
-import functools
+import itertools as itt
+import functools as fct
 import warnings
 
 
@@ -58,6 +58,14 @@ class TensorCommon:
 
     def norm(self):
         return np.sqrt(self.norm_sq())
+
+    @classmethod
+    def default_trunc_err_func(cls, S, chi, norm_sq=None):
+        if norm_sq is None:
+            norm_sq = sum(S**2)
+        sum_disc = sum(S[chi:]**2)
+        err = np.sqrt(sum_disc/norm_sq)
+        return err
 
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -172,8 +180,8 @@ class TensorCommon:
         # to contract with each other. In addition raise a warning if
         # the dirs don't match.
         assert(len(a) == len(b))
-        assert(all(itertools.starmap(
-            functools.partial(self.compatible_indices, other),
+        assert(all(itt.starmap(
+            fct.partial(self.compatible_indices, other),
             zip(a, b))))
         if (self.dirs is not None and other.dirs is not None and
                 not all(self.dirs[i] + other.dirs[j] == 0
@@ -335,8 +343,8 @@ class TensorCommon:
         matrix_eig functions of subclasses.
         """
         if chis is None:
-            min_dim = min(type(self).flatten_dim(self.shape[0]),
-                          type(self).flatten_dim(self.shape[1])) + 1
+            min_dim = min(type(self).flatten_dim(self.shape[i])
+                          for i in range(len(self.shape))) + 1
             if eps > 0:
                 chis = tuple(range(min_dim))
             else:

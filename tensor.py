@@ -1,9 +1,9 @@
 import numpy as np
 import collections
 import itertools
-import operator
+import operator as opr
+import functools as fct
 import scipy.sparse.linalg as spsla
-from functools import reduce
 from tensors.tensorcommon import TensorCommon
 
 class Tensor(TensorCommon, np.ndarray):
@@ -153,10 +153,8 @@ class Tensor(TensorCommon, np.ndarray):
             # pretruncated already.
             norm_sq = sum(S**2)
         if trunc_err_func is None:
-            def trunc_err_func(S, chi):
-                sum_disc = sum(S[chi:]**2)
-                err = np.sqrt(sum_disc/norm_sq)
-                return err
+            trunc_err_func = fct.partial(cls.default_trunc_err_func,
+                                         norm_sq=norm_sq)
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
@@ -168,7 +166,10 @@ class Tensor(TensorCommon, np.ndarray):
                     while 0 < chi < len(S):
                         last_in = S[chi-1]
                         last_out = S[chi]
-                        rel_diff = np.abs(last_in-last_out)/last_in
+                        rel_diff = np.abs(last_in-last_out)
+                        avrg = (last_in + last_out)/2
+                        if avrg != 0:
+                            rel_diff /= avrg
                         if rel_diff < degeneracy_eps:
                             chi -= 1
                         else:
@@ -216,7 +217,7 @@ class Tensor(TensorCommon, np.ndarray):
         # Now we only need to insert the indices that are not joined.
         not_joined = [[i] for i in range(len(self.shape)) if i not in joined]
         all_in_batches = not_joined + index_batches
-        all_in_batches.sort(key=operator.itemgetter(0))
+        all_in_batches.sort(key=opr.itemgetter(0))
         p = sum(all_in_batches, [])
         index_batches = [batch for batch in all_in_batches if len(batch) > 1]
         index_batches = [list(map(p.index, batch)) for batch in index_batches]
@@ -227,7 +228,7 @@ class Tensor(TensorCommon, np.ndarray):
 
         shp = list(self.shape)
         for batch in reversed(index_batches):
-            new_dim = reduce(operator.mul, map(shp.__getitem__, batch))
+            new_dim = fct.reduce(opr.mul, map(shp.__getitem__, batch))
             shp[batch[0]] = new_dim
             del shp[batch[1] : batch[0]+len(batch)]
         self = self.reshape(shp)
