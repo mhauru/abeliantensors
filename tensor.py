@@ -148,11 +148,11 @@ class Tensor(TensorCommon, np.ndarray):
                        degeneracy_eps=1e-6, trunc_err_func=None,
                        norm_sq=None):
         S = np.abs(S)
-        if norm_sq is None:
-            # The user may provide this if the given S has been
-            # pretruncated already.
-            norm_sq = sum(S**2)
         if trunc_err_func is None:
+            if norm_sq is None:
+                # The user may provide this if the given S has been
+                # pretruncated already.
+                norm_sq = sum(S**2)
             trunc_err_func = fct.partial(cls.default_trunc_err_func,
                                          norm_sq=norm_sq)
         # Find the smallest chi for which the error is small enough.
