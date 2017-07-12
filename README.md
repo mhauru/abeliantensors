@@ -3,6 +3,7 @@
 Tensors is a Python 3 package that implements Abelian symmetry preserving
 tensors, as described in
 https://arxiv.org/abs/0907.2994
+&
 https://arxiv.org/abs/1008.4774
 
 The implementation is built on top of numpy, and the block-wise sparse
@@ -11,7 +12,7 @@ dictionaries.
 
 At the core of the package is the class AbelianTensor, that implements tensors
 with Abelian symmetries. It is subclassed to create the classes TensorZ2,
-TensorZ3 and TensorU1, for the symmetry groups $Z_2$, $Z_3$ and $U(1)$.
+TensorZ3 and TensorU1, for the symmetry groups Z_2, Z_3 and U(1).
 Implementing other Abelian symmetries should vary from quite easy to trivial.
 In addition, there's a class called Tensor, that is simply a wrapper around
 regular numpy arrays, that provides an interface for numpy arrays that is
@@ -51,11 +52,12 @@ structure they have.
 
 `symmetrytensors.py`: A small file that simply creates subclasses of
 AbelianTensor for specific symmetry groups. If you need something other than
-$Z_2$, $Z_3$ and $U_1$, check this file to see how you could add what you need.
+Z_2, Z_3 and U(1), check this file to see how you could add what you need.
 
-`tests`: Plenty of tests for the various classes, most of which are based on
-generating a random instance of one of the "fancy" tensor classes in this
-package, and confirming that the following diagram commutes:
+`tests`: Plenty of tests for the various classes. The tests require the ncon package
+(https://github.com/mhauru/ncon). Most of the tests are based on generating a random
+instance of one of the "fancy" tensor classes in this package, and confirming that
+the following diagram commutes:
 ```
 Fancy tensor --- map to numpy ndarray ---> ndarray
     |                                         |
