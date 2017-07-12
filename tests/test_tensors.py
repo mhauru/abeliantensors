@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import warnings
 from timer import Timer
-from scon import scon
+from ncon import ncon
 from custom_parser import parse_argv
 from tensors.tests.ndarray_svd import svd, eig
 from tensors import Tensor
@@ -29,7 +29,7 @@ pars = parse_argv(sys.argv,
                   ("test_split", "bool", True),
                   ("test_miscellaneous", "bool", True),
                   ("test_expand_dims_product", "bool", True),
-                  ("test_scon_svd_scon", "bool", True),
+                  ("test_ncon_svd_ncon", "bool", True),
                   ("n_iters", "int", 500),
                   ("classes", "word_list", ["Tensor", "TensorZ2", "TensorU1",
                                             "TensorZ3"]))
@@ -688,13 +688,13 @@ for cls in classes:
             assert(rel_err<eps or sum(type(S).flatten_shape(S.shape)) == chi)
 
             # No truncation, hermitian
-            T_scon_list = list(range(-len(T.shape), 0))
-            T_conj_scon_list = [i - 100 for i in T_scon_list]
+            T_ncon_list = list(range(-len(T.shape), 0))
+            T_conj_ncon_list = [i - 100 for i in T_ncon_list]
             for counter, i in enumerate(i_list_compl):
-                T_scon_list[i] = counter+1
-                T_conj_scon_list[i] = counter+1
+                T_ncon_list[i] = counter+1
+                T_conj_ncon_list[i] = counter+1
 
-            T = scon((T, T.conjugate()), (T_scon_list, T_conj_scon_list))
+            T = ncon((T, T.conjugate()), (T_ncon_list, T_conj_ncon_list))
             T_orig = T.copy()
             T_np = T.to_ndarray()
             i_list = list(range(len(i_list_compl)))
@@ -903,9 +903,9 @@ for cls in classes:
         print('Done testing expand_dims products.')
 
 
-    if pars["test_scon_svd_scon"]:
+    if pars["test_ncon_svd_ncon"]:
         for iter_num in range(pars["n_iters"]):
-            # Create a random scon contraction
+            # Create a random ncon contraction
             n_tensors = np.random.randint(low=1, high=4)
             shapes = []
             qhapes = []
@@ -921,13 +921,13 @@ for cls in classes:
                 for j in range(len(shp)):
                     indices.add((i,j))
 
-            scon_lists = []
+            ncon_lists = []
             index_numbers = set(range(-len(indices), 0))
             for shp in shapes:
-                scon_list = []
+                ncon_list = []
                 for index in shp:
-                    scon_list.append(index_numbers.pop())
-                scon_lists.append(scon_list)
+                    ncon_list.append(index_numbers.pop())
+                ncon_lists.append(ncon_list)
 
             n_contractions = np.random.randint(low=0, high=int(len(indices)/2)+1)
             for counter in range(1, n_contractions+1):
@@ -936,8 +936,8 @@ for cls in classes:
                 shapes[t2][i2] = shapes[t1][i1]
                 qhapes[t2][i2] = qhapes[t1][i1]
                 dirss[t2][i2] = -dirss[t1][i1]
-                scon_lists[t1][i1] = counter
-                scon_lists[t2][i2] = counter
+                ncon_lists[t1][i1] = counter
+                ncon_lists[t2][i2] = counter
 
             tensors = []
             np_tensors = []
@@ -947,9 +947,9 @@ for cls in classes:
                 tensors.append(tensor)
                 np_tensors.append(np_tensor)
             
-            T = scon(tensors, scon_lists)
+            T = ncon(tensors, ncon_lists)
             test_internal_consistency(T)
-            np_T = scon(np_tensors, scon_lists)
+            np_T = ncon(np_tensors, ncon_lists)
             np_T = type(T).from_ndarray(np_T, shape=T.shape, qhape=T.qhape,
                                         dirs=T.dirs, charge=T.charge)
             assert(T.allclose(np_T))
@@ -966,18 +966,18 @@ for cls in classes:
                 np.random.shuffle(i_list_compl)
                 U, S, V = T.svd(i_list, i_list_compl, eps=1e-15)
 
-                # scon U, S and V with S to get the norm_sq of S.
+                # ncon U, S and V with S to get the norm_sq of S.
                 S_diag = S.diag().conjugate()
                 U = U.conjugate()
                 V = V.conjugate()
                 U_left_inds = [i+1 for i in i_list]
                 V_right_inds = [j+1 for j in i_list_compl]
-                norm_sq_scon = scon((T, U, S_diag, V),
+                norm_sq_ncon = ncon((T, U, S_diag, V),
                                     (list(range(1, len(T.shape)+1)),
                                      U_left_inds + [100],
                                      [100,101],
                                      [101] + V_right_inds))
                 norm_sq = S.norm_sq()
-                assert(np.allclose(norm_sq, norm_sq_scon.value()))
-        print('Done testing scon_svd_scon.')
+                assert(np.allclose(norm_sq, norm_sq_ncon.value()))
+        print('Done testing ncon_svd_ncon.')
 
