@@ -1,9 +1,8 @@
 import numpy as np
 import sys
 import warnings
-from timer import Timer
+import argparse
 from ncon import ncon
-from custom_parser import parse_argv
 from tensors.tests.ndarray_svd import svd, eig
 from tensors import Tensor
 from tensors import TensorZ2, TensorU1, TensorZ3
@@ -13,41 +12,51 @@ from tensors import TensorZ2, TensorU1, TensorZ3
 # We do not accept warnings in the test, so raise them as errors.
 warnings.simplefilter("error", UserWarning)
 
-pars = parse_argv(sys.argv,
-                  # Format is: (name_of_argument, type, default)
-                  ("test_to_and_from_ndarray", "bool", True),
-                  ("test_arithmetic_and_comparison", "bool", True),
-                  ("test_transposing", "bool", True),
-                  ("test_splitting_and_joining", "bool", True),
-                  ("test_to_and_from_matrix", "bool", True),
-                  ("test_diag", "bool", True),
-                  ("test_trace", "bool", True),
-                  ("test_multiply_diag", "bool", True),
-                  ("test_product", "bool", True),
-                  ("test_svd", "bool", True),
-                  ("test_eig", "bool", True),
-                  ("test_split", "bool", True),
-                  ("test_miscellaneous", "bool", True),
-                  ("test_expand_dims_product", "bool", True),
-                  ("test_ncon_svd_ncon", "bool", True),
-                  ("n_iters", "int", 500),
-                  ("classes", "word_list", ["Tensor", "TensorZ2", "TensorU1",
-                                            "TensorZ3"]))
-pars = vars(pars)
+def parse_args(argv, arg_list):
+    parser = argparse.ArgumentParser()
+    for t in arg_list:
+        parser.add_argument('-' + t[0], type=t[1], default=t[2])
+    args = parser.parse_args(argv[1:])
+    pars = vars(args)
+    return pars
+
+arg_list = (
+    # Format is: (name_of_argument, type, default)
+    ("test_to_and_from_ndarray", bool, True),
+    ("test_arithmetic_and_comparison", bool, True),
+    ("test_transposing", bool, True),
+    ("test_splitting_and_joining", bool, True),
+    ("test_to_and_from_matrix", bool, True),
+    ("test_diag", bool, True),
+    ("test_trace", bool, True),
+    ("test_multiply_diag", bool, True),
+    ("test_product", bool, True),
+    ("test_svd", bool, True),
+    ("test_eig", bool, True),
+    ("test_split", bool, True),
+    ("test_miscellaneous", bool, True),
+    ("test_expand_dims_product", bool, True),
+    ("test_ncon_svd_ncon", bool, True),
+    ("n_iters", int, 500),
+    ("classes", str, "Tensor, TensorZ2, TensorU1, TensorZ3")
+)
+
+pars = parse_args(sys.argv, arg_list)
 
 classes = []
-for w in pars["classes"]:
-    if w.strip().lower() == "tensor":
-        classes.append(Tensor)
-    elif w.strip().lower() == "tensorz2":
-        classes.append(TensorZ2)
-    elif w.strip().lower() == "tensoru1":
-        classes.append(TensorU1)
-    elif w.strip().lower() == "tensorz3":
-        classes.append(TensorZ3)
+cls_str = pars["classes"]
+# The "Tensor" case is trickier to check than the others, because
+# "Tensor" is a substring of for instance "TensorZ2". Should really use
+# regexps here.
+if cls_str.find("Tensor,") != -1 or cls_str[-6:] == "Tensor":
+    classes.append(Tensor)
+if cls_str.find("TensorZ2") != -1:
+    classes.append(TensorZ2)
+if cls_str.find("TensorU1") != -1:
+    classes.append(TensorU1)
+if cls_str.find("TensorZ3") != -1:
+    classes.append(TensorZ3)
 
-timer = Timer()
-timer.start()
 
 def test_internal_consistency(T):
     if not isinstance(T, (Tensor, np.generic, np.ndarray)):
