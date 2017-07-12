@@ -7,7 +7,7 @@ import functools as fct
 import operator as opr
 import scipy.sparse.linalg as spsla
 from copy import deepcopy
-from tensors.tensorcommon import TensorCommon
+from .tensorcommon import TensorCommon
 
 def generate_binary_deferer(op_func):
     def deferer(self, B, *args, **kwargs):

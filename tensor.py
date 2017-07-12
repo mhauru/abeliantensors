@@ -4,7 +4,7 @@ import itertools
 import operator as opr
 import functools as fct
 import scipy.sparse.linalg as spsla
-from tensors.tensorcommon import TensorCommon
+from .tensorcommon import TensorCommon
 
 class Tensor(TensorCommon, np.ndarray):
     """ This class implements no new functionality beyond ndarrays, but

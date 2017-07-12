@@ -3,7 +3,7 @@ import collections
 import itertools
 import sys
 from functools import reduce
-from tensors.abeliantensor import AbelianTensor
+from .abeliantensor import AbelianTensor
 
 class TensorZQ(AbelianTensor):
 

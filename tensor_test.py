@@ -4,10 +4,10 @@ import warnings
 from timer import Timer
 from scon import scon
 from custom_parser import parse_argv
-from tensors.ndarray_svd import svd, eig
-from tensors.tensorcommon import TensorCommon
-from tensors.tensor import Tensor
-from tensors.symmetrytensors import TensorZ2, TensorU1, TensorZ3
+from .ndarray_svd import svd, eig
+from .tensorcommon import TensorCommon
+from .tensor import Tensor
+from .symmetrytensors import TensorZ2, TensorU1, TensorZ3
 
 """ A test suite for the tensors package. """
 
