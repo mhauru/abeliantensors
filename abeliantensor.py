@@ -24,9 +24,9 @@ def generate_unary_deferer(op_func):
 
 class AbelianTensor(TensorCommon):
     """ A class for symmetry preserving tensors capabable of handling
-    all abelian symmetry groups. Meant to be subclassed to implement
+    abelian symmetry groups. Meant to be subclassed to implement
     specific symmetries, which can typically be done by simply fixing
-    the qodulus (see below) of the class.
+    the qodulus of the class (see below).
     
     Every AbelianTensor has the following attributes:
 
@@ -73,16 +73,15 @@ class AbelianTensor(TensorCommon):
     symmetry determined by qodulus, in the sense described in the
     definition of charge. If False, this condition is ignored and any
     block can be set. Note that as with defval, many methods require the
-    tensor to be invariant and invar == False is mainly meant for
+    tensor to be invariant and invar == False is mainly used for
     handling vectors of singular values and eigenvalues. If invar ==
     True then defval must be 0, unless the tensor is a scalar of charge
     0.
 
     Note that many of these rules are not constantly checked for and can
     be broken by the user. In such cases behavior of the class is not
-    quaranteed. The method check_consistency can be used to check that
+    guaranteed. The method check_consistency can be used to check that
     the tensor conforms to this definition.
-
     """
 
     def __init__(self, shape, qhape=None, qodulus=None, sects=None, dirs=None,
@@ -194,7 +193,7 @@ class AbelianTensor(TensorCommon):
 
     @classmethod
     def eye(cls, dim, qim=None, qodulus=None, dtype=np.float_):
-        """ Outputs an identity tensor of shape=[dim,dim],
+        """ Returns an identity tensor of shape=[dim,dim],
         qhape=[qim,qim] and dirs[1,-1].
         """
         assert(cls.check_qim_dim_match(qim, dim))
@@ -266,16 +265,17 @@ class AbelianTensor(TensorCommon):
     # Methods for slicing, setting and getting elements
 
     def fill(self, value):
+        """Set all the elements of the tensor to be value."""
         self.defval = value
         for v in self.sects.values():
             v.fill(value)
 
     def __getitem__(self, k):
         """ If self[k] is called, then first self.sects[k] is checked.
-        If the key is not found, we check if the k still is a valid key
-        for this tensor. If yes, a block full of defval is created, set
-        to be self[k] and returned. If not, a KeyError is raised, with
-        message describing what went wrong.
+        If the key is not found, we check if k still is a valid key for
+        this tensor. If yes, a block full of defval is created, set
+        assigned to self[k], and returned. If not, a KeyError is raised,
+        with message describing what went wrong.
         """
         try:
             return self.sects.__getitem__(k)
@@ -381,8 +381,9 @@ class AbelianTensor(TensorCommon):
     __invert__ = generate_unary_deferer(opr.invert)
 
     def conj(self):
-        """ Conjugation complex conjugates, flips the directions of
-        all the indices and flips the sign of the charge.
+        """ Returns a new tensor that is the complex conjugate of self,
+        with the directions of all the legs flipped and the charge of
+        negated.
         """
         res = self.defer_unary_elementwise(np.conj)
         res.dirs = list(map(opr.neg, res.dirs))
@@ -393,6 +394,9 @@ class AbelianTensor(TensorCommon):
 
 
     def astype(self, dtype, casting='unsafe', copy=True):
+        """Changes the dtype of the tensor. By default creates a copy,
+        but works in place if copy=False.
+        """
         if not np.can_cast(self.dtype, dtype, casting=casting):
             raise ValueError("Cannot cast {} into {} with casting={}.".
                              format(self.dtype, dtype, casting))
@@ -447,7 +451,7 @@ class AbelianTensor(TensorCommon):
         the defval of self are operated on with op_func(_, B, *args,
         **kwargs).
 
-        The operation is never in-place, but always a new tensor. The
+        The operation is never in-place, and returns a a new tensor. The
         new tensor is like self in its attributes, but may be
         non-invariant if its defval ends up being non-zero.
 
@@ -951,6 +955,9 @@ class AbelianTensor(TensorCommon):
     def find_trunc_dim(cls, S, S_sects, minusabs_next_els, dims,
                        chis=None, eps=0, break_degenerate=False,
                        degeneracy_eps=1e-6, trunc_err_func=None, norm_sq=None):
+        """ A utility function that is used by eigenvalue and singular
+        value decompositions.
+        """
         # First, find what chi will be.
         S = -np.sort(-np.abs(S))
         if norm_sq is None:
@@ -1012,14 +1019,15 @@ class AbelianTensor(TensorCommon):
     def join_indices(self, *inds, dirs=None,
                      return_transposed_shape_data=False):
         """ Joins indices together in the spirit of reshape. inds is
-        either a iterable of indices, in which case they are joined, or
-        a iterable of iterables of indices, in which case the indices
-        listed in each element of inds will be joined.
+        either an iterable of indices, in which case they are joined, or
+        an iterable of iterables of indices, in which case the indices
+        listed in each element of inds (a "batch") will be joined.
         
         Before any joining is done the indices are transposed so that
         for every batch of indices to be joined the first remains in
-        place and the others are moved to be after in the order given.
-        The order in which the batches are given does not matter.
+        place and the others are moved to be after it in the order
+        given. The order in which the batches are given does not
+        matter.
         
         dirs are the directions of the new indices, defaults to
         [1,...,1]. If a batch of indices to be joined consists of only
@@ -1235,7 +1243,7 @@ class AbelianTensor(TensorCommon):
         Correspondingly dims, qims and dirs should then have one level
         of depth less as well.
 
-        split_indices never modifies the original tensor.
+        split_indices does not modify the original tensor.
         """
         # Formatting the input so that indices is a list and dim_batches
         # and dim_batches are lists of lists.
@@ -1457,6 +1465,8 @@ class AbelianTensor(TensorCommon):
         "r" (the diagonal matrix comes from the right) or
         self.dot(diag_vect.diag(), (axis, 1)) if direction = "left" or
         "l"
+        This operation is just done without constructing the full
+        diagonal matrix.
         """
         assert(diag_vect.qodulus == self.qodulus)
         assert(diag_vect.charge == 0)
@@ -1503,9 +1513,9 @@ class AbelianTensor(TensorCommon):
         """
         assert(self.qodulus == other.qodulus)
 
-        # The following essentially a massive case statement on whether
-        # self and other are scalar, vectors or matrices. Unwieldly, but
-        # efficient and clear.
+        # The following essentially is a massive case statement on
+        # whether self and other are scalars, vectors or matrices.
+        # Unwieldly, but efficient and clear.
         if not self.shape and not other.shape:
             return self*other
         else:
@@ -1637,8 +1647,8 @@ class AbelianTensor(TensorCommon):
         Truncation works like for SVD.
 
         The output is in the form S, U, where S is a non-invariant
-        vector of eigenvalues and U is a matrix that has its columns the
-        eigenvectors. Both have the same dim and qim as self.
+        vector of eigenvalues and U is a matrix that has as its columns
+        the eigenvectors. Both have the same dim and qim as self.
         """
         chis = self.matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)
@@ -1756,16 +1766,18 @@ class AbelianTensor(TensorCommon):
         is truncated to one of these dimensions chi, meaning that only
         chi largest singular values are kept. If chis is a single
         integer (either within a singleton list or just as a bare
-        integer) this dimension is used. If no eps==0, the largest value
+        integer) this dimension is used. If eps==0, the largest value
         in chis is used. Otherwise the smallest chi in chis is used,
         such that the relative error made in the truncation is smaller
-        than eps.
+        than eps. The truncation error is by default the Frobenius norm
+        of the difference, but can be specified with the keyword agument
+        trunc_err_func.
 
         An exception to the above is degenerate singular values. By
         default truncation is never done so that some singular values
         are included while others of the same value are left out. If
-        this is about to happen chi is decreased so that none of the
-        degenerate singular values is included. This default behavior
+        this is about to happen, chi is decreased so that none of the
+        degenerate singular values are included. This default behavior
         can be changed with the keyword argument break_degenerate=True.
         The default threshold for when singular values are considered
         degenerate is 1e-6. This can be changed with the keyword
@@ -1779,7 +1791,7 @@ class AbelianTensor(TensorCommon):
         if there is truncation. U and S have always charge 0, but V has
         the same charge as self. U has dirs [d,-d] where d =
         self.dirs[0], but V has the same dirs as self. rel_err is the
-        relative Frobenius norm error caused by the truncation.
+        truncation error.
         """
         chis = self.matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)

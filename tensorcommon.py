@@ -369,6 +369,11 @@ class TensorCommon:
         (US, {S}, SV, {rel_err}),
         where the ones in curly brackets are only returned if the
         corresponding arguments are True.
+
+        The distribution of sqrt(S) onto the two sides can be changed
+        with the keyword argument weight. If weight="left"
+        (correspondingly "right") then S is multiplied into U
+        (correspondingly V). By default weight="both".
         """
         svd_result = self.svd(a, b, *args, return_rel_err=return_rel_err,
                               **kwargs)
