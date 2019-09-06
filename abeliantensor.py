@@ -1355,6 +1355,7 @@ class AbelianTensor(TensorCommon):
                     block_shape[indices[i]:indices[i]+1] = dcomb
                     slc[indices[i]] = slice(cumdim[0], cumdim[1])
                 new_key = tuple(new_key)
+                slc = tuple(slc)
                 # Blam!
                 new_sects[new_key] = v[slc].reshape(block_shape)
         res = self.empty_like()
