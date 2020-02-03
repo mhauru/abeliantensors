@@ -6,9 +6,9 @@ import warnings
 
 
 class TensorCommon:
-    """ A base class for Tensor and AbelianTensor, that implements some
-    higher level functions that are common to the two. Useful also for
-    type checking as in isinstance(T, TensorCommon).
+    """A base class for Tensor and AbelianTensor, that implements some higher
+    level functions that are common to the two. Useful also for type checking
+    as in isinstance(T, TensorCommon).
     """
 
     @classmethod
@@ -79,20 +79,19 @@ class TensorCommon:
         dirs=None,
         return_transposed_shape_data=False,
     ):
-        """ Transposes left_inds to one side of self and right_inds to
-        the other, and joins these indices so that the result is a
-        matrix. On both sides, before reshaping, the indices are also
-        transposed to the order given in left/right_inds. If one or both
-        of left/right_inds is not provided the result is a vector or a
-        scalar. 
+        """Transposes left_inds to one side of self and right_inds to the
+        other, and joins these indices so that the result is a matrix. On both
+        sides, before reshaping, the indices are also transposed to the order
+        given in left/right_inds. If one or both of left/right_inds is not
+        provided the result is a vector or a scalar.
 
-        dirs are the directions of the new indices. By default it is
-        [1,-1] for matrices and [1] (respectively [-1]) if only
-        left_inds (respectively right_inds) is provided.
+        dirs are the directions of the new indices. By default it is [1,-1] for
+        matrices and [1] (respectively [-1]) if only left_inds (respectively
+        right_inds) is provided.
 
-        If return_transposed_shape_data is True then the shape, qhape
-        and dirs of the tensor after all the transposing but before
-        reshaping is returned as well.
+        If return_transposed_shape_data is True then the shape, qhape and dirs
+        of the tensor after all the transposing but before reshaping is
+        returned as well.
         """
         if dirs is None:
             if len(left_inds) > 0 and len(right_inds) > 0:
@@ -118,9 +117,8 @@ class TensorCommon:
                 transposed_dirs,
             ) = result
 
-        # join_indices does not return a matrix with left_inds as the
-        # first index and right_inds as the second, so we may have to
-        # transpose.
+        # join_indices does not return a matrix with left_inds as the first
+        # index and right_inds as the second, so we may have to transpose.
         if left_inds and right_inds and left_inds[0] > right_inds[0]:
             result = result.swapaxes(1, 0)
             if return_transposed_shape_data:
@@ -150,12 +148,12 @@ class TensorCommon:
         left_dirs=None,
         right_dirs=None,
     ):
-        """ The counter part of to_matrix, from_matrix takes in a matrix
-        and the dims, qims and dirs lists of the left and right indices
-        that the resulting tensor should have. Mainly meant to be used
-        so that one first calls to_matrix, takes note of the
-        transposed_shape_data and uses that to reshape the matrix back
-        to a tensor once one is done operating on the matrix.
+        """The counter part of to_matrix, from_matrix takes in a matrix and
+        the dims, qims and dirs lists of the left and right indices that the
+        resulting tensor should have. Mainly meant to be used so that one first
+        calls to_matrix, takes note of the transposed_shape_data and uses that
+        to reshape the matrix back to a tensor once one is done operating on
+        the matrix.
         """
         indices = tuple(range(len(self.shape)))
         final_dims = ()
@@ -179,9 +177,9 @@ class TensorCommon:
         )
 
     def dot(self, other, indices):
-        """ Dot product of tensors. See numpy.tensordot on how to use
-        this, the interface is exactly the same, except that this one is
-        a method, not a function. The original tensors are not modified.
+        """Dot product of tensors. See numpy.tensordot on how to use this, the
+        interface is exactly the same, except that this one is a method, not a
+        function. The original tensors are not modified.
         """
         # We want to deal with lists, not tuples or bare integers
         a, b = indices
@@ -193,10 +191,9 @@ class TensorCommon:
             b = list(b)
         else:
             b = [b]
-        # Check that 1) the number of contracted indices for self and
-        # other match and 2) that the indices are compatible, i.e. okay
-        # to contract with each other. In addition raise a warning if
-        # the dirs don't match.
+        # Check that 1) the number of contracted indices for self and other
+        # match and 2) that the indices are compatible, i.e. okay to contract
+        # with each other. In addition raise a warning if the dirs don't match.
         assert len(a) == len(b)
         assert all(
             itt.starmap(fct.partial(self.compatible_indices, other), zip(a, b))
@@ -253,29 +250,28 @@ class TensorCommon:
         return self
 
     def eig(self, a, b, *args, return_rel_err=False, **kwargs):
-        """ Transpose indices a to be on one side of self, b on the
-        other, and reshape self to a matrix. Then find the eigenvalues
-        and eigenvectors of this matrix, and reshape the eigenvectors to
-        have on the left side the indices that self had on its right
-        side after transposing but before reshaping.
-        
-        If hermitian is True then the matrix that is formed after the
-        reshape is assumed to be hermitian. 
+        """Transpose indices a to be on one side of self, b on the other, and
+        reshape self to a matrix. Then find the eigenvalues and eigenvectors of
+        this matrix, and reshape the eigenvectors to have on the left side the
+        indices that self had on its right side after transposing but before
+        reshaping.
+
+        If hermitian is True then the matrix that is formed after the reshape
+        is assumed to be hermitian.
 
         Truncation works like with SVD.
-        
-        Output is S, U, [rel_err], where S is a vector of eigenvalues
-        and U is a tensor such that the last index enumerates the
-        eigenvectors of self in the sense that if u_i = U[...,i] then
-        self.dot(u_i, (b, all_indices_of_u_i)) == S[i] * u_i. rel_err is
-        relative error in truncation, only returned if return_rel_err is
-        True.
+
+        Output is S, U, [rel_err], where S is a vector of eigenvalues and U is
+        a tensor such that the last index enumerates the eigenvectors of self
+        in the sense that if u_i = U[...,i] then
+        self.dot(u_i, (b, all_indices_of_u_i)) == S[i] * u_i.
+        rel_err is relative error in truncation, only returned if
+        return_rel_err is True.
 
         The above syntax is precisely correct only for Tensors. For
-        AbelianTensors the idea is the same, but eigenvalues and vectors
-        come with quantum numbers so the syntax is slightly different.
-        See AbelianTensor.matrix_eig for more details about what
-        precisely happens.
+        AbelianTensors the idea is the same, but eigenvalues and vectors come
+        with quantum numbers so the syntax is slightly different.  See
+        AbelianTensor.matrix_eig for more details about what precisely happens.
 
         The original tensor is not modified by this method.
         """
@@ -314,28 +310,27 @@ class TensorCommon:
         return ret_val
 
     def svd(self, a, b, *args, return_rel_err=False, **kwargs):
-        """ Transpose indices a to be on one side of self, b on the
-        other, and reshape self to a matrix. Then singular value
-        decompose this matrix into U, S, V. Finally reshape the unitary
-        matrices to tensors that have a new index coming from the SVD,
-        for U as the last index and for V as the first, and U to have
-        indices a as its first indices and V to have indices b as its
-        last indices.
+        """Transpose indices a to be on one side of self, b on the other, and
+        reshape self to a matrix. Then singular value decompose this matrix
+        into U, S, V. Finally reshape the unitary matrices to tensors that have
+        a new index coming from the SVD, for U as the last index and for V as
+        the first, and U to have indices a as its first indices and V to have
+        indices b as its last indices.
 
-        If eps>0 then the SVD may be truncated if the relative Frobenius
-        norm error can be kept below eps.  For this purpose different
-        dimensions to truncate to can be tried, and these dimensions
-        should be listed in chis. If chis is None then the full range of
-        possible dimensions is tried.
+        If eps > 0 then the SVD may be truncated if the relative Frobenius norm
+        error can be kept below eps.  For this purpose different dimensions to
+        truncate to can be tried, and these dimensions should be listed in
+        chis. If chis is None then the full range of possible dimensions is
+        tried.
 
         If print_errors > 0 then the truncation error is printed.
 
-        If return_rel_err is True then the relative truncation error is
-        also returned.
+        If return_rel_err is True then the relative truncation error is also
+        returned.
 
-        Output is U, S, V, and possibly rel_err.  Here S is a vector of
-        singular values and U and V are isometric tensors (unitary if
-        the matrix that is SVDed is square and there is no truncation).
+        Output is U, S, V, and possibly rel_err. Here S is a vector of
+        singular values and U and V are isometric tensors (unitary if the
+        matrix that is SVDed is square and there is no truncation).
         U . diag(S) . V = self, up to truncation errors.
 
         The original tensor is not modified by this method.
@@ -388,9 +383,9 @@ class TensorCommon:
         return ret_val
 
     def matrix_decomp_format_chis(self, chis, eps):
-        """ A common function for formatting the truncation parameters
-        of SVD and eig. This is meant to be called by the matrix_svd and
-        matrix_eig functions of subclasses.
+        """A common function for formatting the truncation parameters of SVD
+        and eig. This is meant to be called by the matrix_svd and matrix_eig
+        functions of subclasses.
         """
         if chis is None:
             min_dim = (
@@ -425,17 +420,17 @@ class TensorCommon:
         weight="both",
         **kwargs
     ):
-        """ Split with SVD. Like SVD, but takes the square root of the
-        singular values and multiplies both unitaries with it, so that
-        the tensor is split into two parts. Values are returned as
-        (US, {S}, SV, {rel_err}),
-        where the ones in curly brackets are only returned if the
-        corresponding arguments are True.
+        """Split with SVD. Like SVD, but takes the square root of the singular
+        values and multiplies both unitaries with it, so that the tensor is
+        split into two parts. Values are returned as
+        (US, [S], SV, [rel_err]),
+        where the ones in curly brackets are only returned if the corresponding
+        arguments are True.
 
-        The distribution of sqrt(S) onto the two sides can be changed
-        with the keyword argument weight. If weight="left"
-        (correspondingly "right") then S is multiplied into U
-        (correspondingly V). By default weight="both".
+        The distribution of sqrt(S) onto the two sides can be changed with the
+        keyword argument weight. If weight="left" (correspondingly "right")
+        then S is multiplied into U (correspondingly V). By default
+        weight="both".
         """
         svd_result = self.svd(
             a, b, *args, return_rel_err=return_rel_err, **kwargs

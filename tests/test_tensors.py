@@ -7,7 +7,7 @@ from tensors.tests.ndarray_svd import svd, eig
 from tensors import Tensor
 from tensors import TensorZ2, TensorU1, TensorZ3
 
-""" A test suite for the tensors package. """
+"""A test suite for the tensors package."""
 
 # We do not accept warnings in the test, so raise them as errors.
 warnings.simplefilter("error", UserWarning)
@@ -47,9 +47,8 @@ pars = parse_args(sys.argv, arg_list)
 
 classes = []
 cls_str = pars["classes"]
-# The "Tensor" case is trickier to check than the others, because
-# "Tensor" is a substring of for instance "TensorZ2". Should really use
-# regexps here.
+# The "Tensor" case is trickier to check than the others, because "Tensor" is a
+# substring of for instance "TensorZ2". Should really use regexps here.
 if cls_str.find("Tensor,") != -1 or cls_str[-6:] == "Tensor":
     classes.append(Tensor)
 if cls_str.find("TensorZ2") != -1:
@@ -697,8 +696,8 @@ for cls in classes:
             else:
                 true_rel_err = 0
             if rel_err > 1e-7 or true_rel_err > 1e-7:
-                # If this doesnt' hold we run into machine epsilon
-                # because of a square root.
+                # If this doesn't hold we run into machine epsilon because of a
+                # square root.
                 assert (
                     np.abs(rel_err - true_rel_err) / (rel_err + true_rel_err)
                     < 1e-7
@@ -867,8 +866,8 @@ for cls in classes:
             else:
                 true_rel_err = 0
             if rel_err > 1e-7 or true_rel_err > 1e-7:
-                # If this doesnt' hold we run into machine epsilon
-                # because of a square root.
+                # If this doesnt' hold we run into machine epsilon because of a
+                # square root.
                 assert (
                     np.abs(rel_err - true_rel_err) / (rel_err + true_rel_err)
                     < 1e-7

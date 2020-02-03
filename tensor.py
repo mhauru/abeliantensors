@@ -8,10 +8,10 @@ from .tensorcommon import TensorCommon
 
 
 class Tensor(TensorCommon, np.ndarray):
-    """ This class implements no new functionality beyond ndarrays, but
-    simply provides ndarrays the same interface that is used by the
-    symmetry preserving tensor classes. Tensors always have qhape == None,
-    dirs == None and charge == 0.
+    """This class implements no new functionality beyond ndarrays, but simply
+    provides ndarrays the same interface that is used by the symmetry
+    preserving tensor classes. Tensors always have qhape == None, dirs == None
+    and charge == 0.
     """
 
     def __new__(
@@ -54,8 +54,8 @@ class Tensor(TensorCommon, np.ndarray):
         res = np.diag(self).view(Tensor)
         return res
 
-    # Every tensor object has the attributes qhape, dirs and charge just
-    # to match the interface of AbelianTensor.
+    # Every tensor object has the attributes qhape, dirs and charge just to
+    # match the interface of AbelianTensor.
     qhape = None
     dirs = None
     charge = 0
@@ -129,7 +129,7 @@ class Tensor(TensorCommon, np.ndarray):
         return res
 
     def value(self):
-        """ For a scalar tensor, return the scalar. """
+        """For a scalar tensor, return the scalar."""
         if self.shape:
             raise ValueError("value called on a non-scalar tensor.")
         else:
@@ -148,12 +148,11 @@ class Tensor(TensorCommon, np.ndarray):
         dirs2=None,
         qodulus=None,
     ):
-        """ Check that the given two tensors have the same form in the
-        sense that if their legs are all flipped to point in the same
-        direction then both tensors have the same qnums for the same
-        indices and with the same dimensions. In stead of giving two
-        tensors, sets of qhapes, shapes and dirs and a qodulus can also
-        be given.
+        """Check that the given two tensors have the same form in the sense
+        that if their legs are all flipped to point in the same direction then
+        both tensors have the same qnums for the same indices and with the same
+        dimensions. In stead of giving two tensors, sets of qhapes, shapes and
+        dirs and a qodulus can also be given.
         """
         if tensor1 is not None:
             shape1 = tensor1.shape
@@ -181,14 +180,14 @@ class Tensor(TensorCommon, np.ndarray):
             trunc_err_func = fct.partial(
                 cls.default_trunc_err_func, norm_sq=norm_sq
             )
-        # Find the smallest chi for which the error is small enough.
-        # If none is found, use the largest chi.
+        # Find the smallest chi for which the error is small enough.  If none
+        # is found, use the largest chi.
         if sum(S) != 0:
             last_out = S[0]
             for chi in chis:
                 if not break_degenerate:
-                    # Make sure that we don't break degenerate singular
-                    # values by including one but not the other.
+                    # Make sure that we don't break degenerate singular values
+                    # by including one but not the other.
                     while 0 < chi < len(S):
                         last_in = S[chi - 1]
                         last_out = S[chi]
@@ -214,21 +213,21 @@ class Tensor(TensorCommon, np.ndarray):
     def join_indices(
         self, *inds, return_transposed_shape_data=False, **kwargs
     ):
-        """ Joins indices together in the spirit of reshape. inds is
-        either a iterable of indices, in which case they are joined, or
-        a iterable of iterables of indices, in which case the indices
-        listed in each element of inds will be joined.
-        
-        Before any joining is done the indices are transposed so that
-        for every batch of indices to be joined the first remains in
-        place and the others are moved to be after in the order given.
-        The order in which the batches are given does not matter.
-        
-        If return_transposed_shape_data is True, then the shape of the
-        tensor after transposing but before reshaping is returned as
-        well, in addition to None and None, that take the place of
-        transposed_qhape and transposed_dirs of AbelianTensor.
-        
+        """Joins indices together in the spirit of reshape. inds is either a
+        iterable of indices, in which case they are joined, or a iterable of
+        iterables of indices, in which case the indices listed in each element
+        of inds will be joined.
+
+        Before any joining is done the indices are transposed so that for every
+        batch of indices to be joined the first remains in place and the others
+        are moved to be after in the order given.  The order in which the
+        batches are given does not matter.
+
+        If return_transposed_shape_data is True, then the shape of the tensor
+        after transposing but before reshaping is returned as well, in addition
+        to None and None, that take the place of transposed_qhape and
+        transposed_dirs of AbelianTensor.
+
         The method does not modify the original tensor.
         """
         # Format index_batches to be a list of lists of indices.
@@ -266,27 +265,26 @@ class Tensor(TensorCommon, np.ndarray):
             return self
 
     def split_indices(self, indices, dims, qims=None, **kwargs):
-        """ Splits indices in the spirit of reshape. Indices is an
-        iterable of indices to be split. Dims is an iterable of
-        iterables such that dims[i]=dim_batch is an iterable of lists of
-        dimensions, each list giving the dimensions along a new index
-        that will come out of splitting indices[i].
+        """Splits indices in the spirit of reshape. Indices is an iterable of
+        indices to be split. Dims is an iterable of iterables such that
+        dims[i]=dim_batch is an iterable of lists of dimensions, each list
+        giving the dimensions along a new index that will come out of splitting
+        indices[i].
 
         An example clarifies:
-        Suppose self has shape [dim1, dim2, dim3, dim4]. Suppose then
-        that indices = [1,3], dims = [[dimA, dimB], [dimC, dimD]].  Then
-        the resulting tensor will have shape [dim1, dimA, dimB, dim3,
-        dimC, dimD], assuming that that dims and are such that joining
-        dimA and dimB gives qim2, etc.
+        Suppose self has shape [dim1, dim2, dim3, dim4]. Suppose then that
+        indices = [1,3], dims = [[dimA, dimB], [dimC, dimD]].  Then the
+        resulting tensor will have shape [dim1, dimA, dimB, dim3, dimC, dimD],
+        assuming that that dims and are such that joining dimA and dimB gives
+        qim2, etc.
 
         In stead of a list of indices a single index may be given.
-        Correspondingly dims should then have one level of depth less as
-        well.
+        Correspondingly dims should then have one level of depth less as well.
 
         split_indices never modifies the original tensor.
         """
-        # Formatting the input so that indices is a list and dim_batches
-        # is a list of lists.
+        # Formatting the input so that indices is a list and dim_batches is a
+        # list of lists.
         if isinstance(indices, collections.Iterable):
             assert len(indices) == len(dims)
             indices = list(indices)
@@ -302,8 +300,8 @@ class Tensor(TensorCommon, np.ndarray):
         if not indices:
             return self.view()
 
-        # Sort indices and dim_batches according to reversed indices.
-        # This is necessary for the next step to work.
+        # Sort indices and dim_batches according to reversed indices. This is
+        # necessary for the next step to work.
         indices, dim_batches = zip(
             *sorted(zip(indices, dim_batches), reverse=True)
         )
@@ -317,8 +315,8 @@ class Tensor(TensorCommon, np.ndarray):
         return res
 
     def multiply_diag(self, diag_vect, axis, *args, **kwargs):
-        """ Multiply self along axis with the diagonal matrix of
-        components diag_vect.
+        """Multiply self along axis with the diagonal matrix of components
+        diag_vect.
         """
         if len(diag_vect.shape) != 1:
             raise ValueError(
@@ -332,9 +330,8 @@ class Tensor(TensorCommon, np.ndarray):
         return res
 
     def trace(self, axis1=0, axis2=1):
-        # We assert that the tensor is square with respect to axis1 and
-        # axis2, to follow as closely as possible what AbelianTensor
-        # does.
+        # We assert that the tensor is square with respect to axis1 and axis2,
+        # to follow as closely as possible what AbelianTensor does.
         assert self.compatible_indices(self, axis1, axis2)
         trace = super(Tensor, self).trace(axis1=axis1, axis2=axis2)
         return type(self).from_ndarray(trace)

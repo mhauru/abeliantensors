@@ -13,36 +13,34 @@ def svd(
     break_degenerate=False,
     degeneracy_eps=1e-6,
 ):
-    """ Reshapes the tensor T have indices a on one side and indices b
-    on the other, SVDs it as a matrix and reshapes the parts back to the
-    original form. a and b should be iterables of integers that number
-    the indices of T. 
+    """Reshapes the tensor T have indices a on one side and indices b on the
+    other, SVDs it as a matrix and reshapes the parts back to the original
+    form. a and b should be iterables of integers that number the indices of T.
 
     The optional argument chis is a list of bond dimensions. The SVD is
-    truncated to one of these dimensions chi, meaning that only chi
-    largest singular values are kept. If chis is a single integer
-    (either within a singleton list or just as a bare integer) this
-    dimension is used. If no eps is given, the largest value in chis is
-    used. Otherwise the smallest chi in chis is used, such that the
-    relative error made in the truncation is smaller than eps.
+    truncated to one of these dimensions chi, meaning that only chi largest
+    singular values are kept. If chis is a single integer (either within a
+    singleton list or just as a bare integer) this dimension is used. If no eps
+    is given, the largest value in chis is used. Otherwise the smallest chi in
+    chis is used, such that the relative error made in the truncation is
+    smaller than eps.
 
     An exception to the above is degenerate singular values. By default
-    truncation is never done so that some singular values are included
-    while others of the same value are left out. If this is about to
-    happen chi is decreased so that none of the degenerate singular
-    values is included. This default behavior can be changed with the
-    keyword argument break_degenerate=True. The default threshold for
-    when singular values are considered degenerate is 1e-6. This can be
-    changed with the keyword argument degeneracy_eps.
+    truncation is never done so that some singular values are included while
+    others of the same value are left out. If this is about to happen chi is
+    decreased so that none of the degenerate singular values is included. This
+    default behavior can be changed with the keyword argument
+    break_degenerate=True. The default threshold for when singular values are
+    considered degenerate is 1e-6. This can be changed with the keyword
+    argument degeneracy_eps.
 
-    If print_errors > 0 truncation errors are printed, with more
-    information as print_errors increases through 1,2 and 3.
+    If print_errors > 0 truncation errors are printed, with more information as
+    print_errors increases through 1,2 and 3.
 
-    By default the function returns the tuple (U,s,V), where in matrix
-    terms U.diag(s).V = T, where the equality is appromixate if there is
-    truncation. If return_rel_err = True a fourth value is returned,
-    which is the ratio sum_of_discarded_singular_values /
-    sum_of_all_singular_values.
+    By default the function returns the tuple (U,s,V), where in matrix terms
+    U.diag(s).V = T, where the equality is appromixate if there is truncation.
+    If return_rel_err = True a fourth value is returned, which is the ratio
+    sum_of_discarded_singular_values / sum_of_all_singular_values.
     """
 
     # We want to deal with lists, not tuples or bare integers
@@ -64,8 +62,8 @@ def svd(
     shp_a = shp[: len(a)]
     shp_b = shp[-len(b) :]
 
-    # Compute the dimensions of the the matrix that will be formed when
-    # indices of a and b are joined together.
+    # Compute the dimensions of the the matrix that will be formed when indices
+    # of a and b are joined together.
     dim_a = 1
     for s in shp_a:
         dim_a = dim_a * s
@@ -101,8 +99,8 @@ def svd(
     # If none is found, use the largest chi.
     for chi in chis:
         if not break_degenerate:
-            # Make sure that we don't break degenerate singular
-            # values by including one but not the other.
+            # Make sure that we don't break degenerate singular values by
+            # including one but not the other.
             while 0 < chi < len(s_sq):
                 last_eig_in = s_sq[chi - 1]
                 last_eig_out = s_sq[chi]
@@ -133,11 +131,10 @@ def svd(
             print("- sum(|s^2_discarded|): %.3e" % sum_disc_sq)
             print("- sum(|s^2_all|): %.3e" % sum_all_sq)
         if print_errors > 2:
-            # Reconstruct the original T_matrix with the truncated
-            # U, s, V and print the error in the reconstruction. The
-            # error is computed as the Frobenius norm so it should
-            # match the ratio of the discarded eigenvalues printed
-            # earlier.
+            # Reconstruct the original T_matrix with the truncated U, s, V and
+            # print the error in the reconstruction. The error is computed as
+            # the Frobenius norm so it should match the ratio of the discarded
+            # eigenvalues printed earlier.
             reco = np.einsum("ij,j->ij", U, s)
             reco = np.dot(reco, V)
             reco_err = np.linalg.norm(T_matrix - reco)
@@ -171,15 +168,15 @@ def eig(
     break_degenerate=False,
     degeneracy_eps=1e-6,
 ):
-    """ Like svd, but for finding the eigenvalues and left eigenvectors.
-    See the documentation of svd.
+    """Like svd, but for finding the eigenvalues and left eigenvectors.  See
+    the documentation of svd.
 
-    The only notable differences are the keyword option hermitian (by
-    default False), that specifies whether the matrix that is obtained
-    by reshaping T is known to be hermitian, and the return values,
-    which are of the form S, U, (rel_err), where S includes the
-    eigenvalues and U[...,i] is the left eigenvector corresponding to
-    S[i]. The first legs of U are compatible with the legs b of T.
+    The only notable differences are the keyword option hermitian (by default
+    False), that specifies whether the matrix that is obtained by reshaping T
+    is known to be hermitian, and the return values, which are of the form S,
+    U, (rel_err), where S includes the eigenvalues and U[...,i] is the left
+    eigenvector corresponding to S[i]. The first legs of U are compatible with
+    the legs b of T.
     """
     # We want to deal with lists, not tuples or bare integers
     if isinstance(a, collections.Iterable):
@@ -195,13 +192,13 @@ def eig(
     # Permute the indices of T to the right order
     perm = tuple(a + b)
     T_matrix = np.transpose(T, perm)
-    # The lists shp_a and shp_b list the dimensions of the bonds in a and b
+    # The lists shp_a and shp_b list the dimensions of the bonds in a and b.
     shp = T_matrix.shape
     shp_a = shp[: len(a)]
     shp_b = shp[-len(b) :]
 
-    # Compute the dimensions of the the matrix that will be formed when
-    # indices of a and b are joined together.
+    # Compute the dimensions of the the matrix that will be formed when indices
+    # of a and b are joined together.
     dim_a = 1
     for s in shp_a:
         dim_a = dim_a * s
@@ -244,8 +241,8 @@ def eig(
     # If none is found, use the largest chi.
     for chi in chis:
         if not break_degenerate:
-            # Make sure that we don't break degenerate eigenvalues by
-            # including one but not the other.
+            # Make sure that we don't break degenerate eigenvalues by including
+            # one but not the other.
             while 0 < chi < len(S_abs_sq):
                 last_eig_in = S_abs_sq[chi - 1]
                 last_eig_out = S_abs_sq[chi]
@@ -275,8 +272,7 @@ def eig(
             print("- sum(|S^2_discarded|): %.3e" % sum_disc_abs_sq)
             print("- sum(|S^2_all|): %.3e" % sum_all_abs_sq)
 
-    # Reshape U to a tensor with shape matching the shape of T and
-    # return.
+    # Reshape U to a tensor with shape matching the shape of T and return.
     U_tens = np.reshape(U, shp_a + (-1,))
     ret_val = S, U_tens
     if return_rel_err:
