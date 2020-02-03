@@ -6,6 +6,7 @@ import functools as fct
 import scipy.sparse.linalg as spsla
 from .tensorcommon import TensorCommon
 
+
 class Tensor(TensorCommon, np.ndarray):
     """ This class implements no new functionality beyond ndarrays, but
     simply provides ndarrays the same interface that is used by the
@@ -13,16 +14,32 @@ class Tensor(TensorCommon, np.ndarray):
     dirs == None and charge == 0.
     """
 
-    def __new__(cls, shape, *args, qhape=None, charge=None, invar=None,
-                dirs=None, **kwargs):
+    def __new__(
+        cls,
+        shape,
+        *args,
+        qhape=None,
+        charge=None,
+        invar=None,
+        dirs=None,
+        **kwargs
+    ):
         shape = cls.flatten_shape(shape)
         res = np.ndarray(shape, *args, **kwargs).view(cls)
         return res
 
     @classmethod
-    def initialize_with(cls, numpy_func, shape, *args,
-                        qhape=None, charge=None, invar=None, dirs=None,
-                        **kwargs):
+    def initialize_with(
+        cls,
+        numpy_func,
+        shape,
+        *args,
+        qhape=None,
+        charge=None,
+        invar=None,
+        dirs=None,
+        **kwargs
+    ):
         shape = cls.flatten_shape(shape)
         res = numpy_func(shape, *args, **kwargs).view(cls)
         return res
@@ -43,7 +60,6 @@ class Tensor(TensorCommon, np.ndarray):
     dirs = None
     charge = 0
 
-
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # To and from normal numpy arrays
 
@@ -58,14 +74,10 @@ class Tensor(TensorCommon, np.ndarray):
             res = np.array(a).view(cls)
         return res
 
-
-
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Methods for slicing, setting and getting elements
 
     fill = np.ndarray.fill
-
-
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Operator methods
@@ -100,8 +112,6 @@ class Tensor(TensorCommon, np.ndarray):
     def sum(self):
         return super(Tensor, self).sum().value()
 
-
-
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Miscellaneous
 
@@ -126,10 +136,18 @@ class Tensor(TensorCommon, np.ndarray):
             return self[()]
 
     @classmethod
-    def check_form_match(cls, tensor1=None, tensor2=None,
-                         qhape1=None, shape1=None, dirs1=None,
-                         qhape2=None, shape2=None, dirs2=None,
-                         qodulus=None):
+    def check_form_match(
+        cls,
+        tensor1=None,
+        tensor2=None,
+        qhape1=None,
+        shape1=None,
+        dirs1=None,
+        qhape2=None,
+        shape2=None,
+        dirs2=None,
+        qodulus=None,
+    ):
         """ Check that the given two tensors have the same form in the
         sense that if their legs are all flipped to point in the same
         direction then both tensors have the same qnums for the same
@@ -144,17 +162,25 @@ class Tensor(TensorCommon, np.ndarray):
         return shape1 == shape2
 
     @classmethod
-    def find_trunc_dim(cls, S, chis=None, eps=0, break_degenerate=False,
-                       degeneracy_eps=1e-6, trunc_err_func=None,
-                       norm_sq=None):
+    def find_trunc_dim(
+        cls,
+        S,
+        chis=None,
+        eps=0,
+        break_degenerate=False,
+        degeneracy_eps=1e-6,
+        trunc_err_func=None,
+        norm_sq=None,
+    ):
         S = np.abs(S)
         if trunc_err_func is None:
             if norm_sq is None:
                 # The user may provide this if the given S has been
                 # pretruncated already.
-                norm_sq = sum(S**2)
-            trunc_err_func = fct.partial(cls.default_trunc_err_func,
-                                         norm_sq=norm_sq)
+                norm_sq = sum(S ** 2)
+            trunc_err_func = fct.partial(
+                cls.default_trunc_err_func, norm_sq=norm_sq
+            )
         # Find the smallest chi for which the error is small enough.
         # If none is found, use the largest chi.
         if sum(S) != 0:
@@ -164,10 +190,10 @@ class Tensor(TensorCommon, np.ndarray):
                     # Make sure that we don't break degenerate singular
                     # values by including one but not the other.
                     while 0 < chi < len(S):
-                        last_in = S[chi-1]
+                        last_in = S[chi - 1]
                         last_out = S[chi]
-                        rel_diff = np.abs(last_in-last_out)
-                        avrg = (last_in + last_out)/2
+                        rel_diff = np.abs(last_in - last_out)
+                        avrg = (last_in + last_out) / 2
                         if avrg != 0:
                             rel_diff /= avrg
                         if rel_diff < degeneracy_eps:
@@ -175,7 +201,7 @@ class Tensor(TensorCommon, np.ndarray):
                         else:
                             break
                 err = trunc_err_func(S, chi)
-                if err <= eps or last_out==0.:
+                if err <= eps or last_out == 0.0:
                     break
         else:
             err = 0
@@ -185,8 +211,9 @@ class Tensor(TensorCommon, np.ndarray):
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # The meat: actual tensor operations
 
-    def join_indices(self, *inds, return_transposed_shape_data=False,
-                     **kwargs):
+    def join_indices(
+        self, *inds, return_transposed_shape_data=False, **kwargs
+    ):
         """ Joins indices together in the spirit of reshape. inds is
         either a iterable of indices, in which case they are joined, or
         a iterable of iterables of indices, in which case the indices
@@ -230,14 +257,13 @@ class Tensor(TensorCommon, np.ndarray):
         for batch in reversed(index_batches):
             new_dim = fct.reduce(opr.mul, map(shp.__getitem__, batch))
             shp[batch[0]] = new_dim
-            del shp[batch[1] : batch[0]+len(batch)]
+            del shp[batch[1] : batch[0] + len(batch)]
         self = self.reshape(shp)
 
         if return_transposed_shape_data:
             return self, transposed_shape, None, None
         else:
             return self
-
 
     def split_indices(self, indices, dims, qims=None, **kwargs):
         """ Splits indices in the spirit of reshape. Indices is an
@@ -262,39 +288,42 @@ class Tensor(TensorCommon, np.ndarray):
         # Formatting the input so that indices is a list and dim_batches
         # is a list of lists.
         if isinstance(indices, collections.Iterable):
-            assert(len(indices) == len(dims))
+            assert len(indices) == len(dims)
             indices = list(indices)
             dim_batches = list(map(list, dims))
         else:
             indices = [indices]
             dim_batches = [list(dims)]
-        dim_batches = [[type(self).flatten_dim(dim) for dim in batch]
-                        for batch in dim_batches]
+        dim_batches = [
+            [type(self).flatten_dim(dim) for dim in batch]
+            for batch in dim_batches
+        ]
 
         if not indices:
             return self.view()
 
         # Sort indices and dim_batches according to reversed indices.
         # This is necessary for the next step to work.
-        indices, dim_batches = zip(*sorted(zip(indices, dim_batches),
-                                           reverse=True))
+        indices, dim_batches = zip(
+            *sorted(zip(indices, dim_batches), reverse=True)
+        )
         # Compute the new shape.
         new_shape = list(self.shape)
         for ind, batch in zip(indices, dim_batches):
-            new_shape[ind:ind+1] = batch
+            new_shape[ind : ind + 1] = batch
 
         # Reshape
         res = self.reshape(new_shape)
         return res
 
-    
     def multiply_diag(self, diag_vect, axis, *args, **kwargs):
         """ Multiply self along axis with the diagonal matrix of
         components diag_vect.
         """
         if len(diag_vect.shape) != 1:
-            raise ValueError("Second argument of multiply_diag must be a "
-                             "vector.")
+            raise ValueError(
+                "Second argument of multiply_diag must be a " "vector."
+            )
         if axis < 0:
             axis = len(self.shape) + axis
         res = self.swapaxes(-1, axis)
@@ -302,15 +331,13 @@ class Tensor(TensorCommon, np.ndarray):
         res = res.swapaxes(-1, axis)
         return res
 
-
     def trace(self, axis1=0, axis2=1):
         # We assert that the tensor is square with respect to axis1 and
         # axis2, to follow as closely as possible what AbelianTensor
         # does.
-        assert(self.compatible_indices(self, axis1, axis2))
+        assert self.compatible_indices(self, axis1, axis2)
         trace = super(Tensor, self).trace(axis1=axis1, axis2=axis2)
         return type(self).from_ndarray(trace)
-
 
     def dot(self, B, indices):
         result = np.tensordot(self, B, indices)
@@ -318,17 +345,23 @@ class Tensor(TensorCommon, np.ndarray):
             result = type(self).from_ndarray(result)
         return result
 
-
     def matrix_dot(self, B):
         result = np.dot(self, B)
         if not isinstance(result, TensorCommon):
             result = type(self).from_ndarray(result)
         return result
 
-
-    def matrix_eig(self, chis=None, eps=0, print_errors=0, hermitian=False,
-                   break_degenerate=False, degeneracy_eps=1e-6,
-                   sparse=False, trunc_err_func=None):
+    def matrix_eig(
+        self,
+        chis=None,
+        eps=0,
+        print_errors=0,
+        hermitian=False,
+        break_degenerate=False,
+        degeneracy_eps=1e-6,
+        sparse=False,
+        trunc_err_func=None,
+    ):
         chis = self.matrix_decomp_format_chis(chis, eps)
         mindim = min(self.shape)
         maxchi = max(chis)
@@ -346,33 +379,43 @@ class Tensor(TensorCommon, np.ndarray):
             norm_sq = None
         order = np.argsort(-np.abs(S))
         S = S[order]
-        U = U[:,order]
+        U = U[:, order]
         # Truncate, if truncation dimensions are given.
         chi, rel_err = type(self).find_trunc_dim(
-            S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
-            norm_sq=norm_sq)
+            S,
+            chis=chis,
+            eps=eps,
+            break_degenerate=break_degenerate,
+            degeneracy_eps=degeneracy_eps,
+            trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq,
+        )
         # Truncate
         S = S[:chi]
-        U = U[:,:chi]
+        U = U[:, :chi]
         if print_errors > 0:
-            print('Relative truncation error in eig: %.3e' % rel_err)
+            print("Relative truncation error in eig: %.3e" % rel_err)
         if not isinstance(S, TensorCommon):
             S = type(self).from_ndarray(S)
         if not isinstance(U, TensorCommon):
             U = type(self).from_ndarray(U)
         return S, U, rel_err
 
-
-    def matrix_svd(self, chis=None, eps=0, print_errors=0,
-                   break_degenerate=False, degeneracy_eps=1e-6,
-                   sparse=False, trunc_err_func=None):
+    def matrix_svd(
+        self,
+        chis=None,
+        eps=0,
+        print_errors=0,
+        break_degenerate=False,
+        degeneracy_eps=1e-6,
+        sparse=False,
+        trunc_err_func=None,
+    ):
         chis = self.matrix_decomp_format_chis(chis, eps)
         mindim = min(self.shape)
         maxchi = max(chis)
         if sparse and maxchi < mindim - 1:
-            U, S, V = spsla.svds(self, k=maxchi,
-                                 return_singular_vectors=True)
+            U, S, V = spsla.svds(self, k=maxchi, return_singular_vectors=True)
             norm_sq = self.norm_sq()
         else:
             U, S, V = np.linalg.svd(self, full_matrices=False)
@@ -380,18 +423,22 @@ class Tensor(TensorCommon, np.ndarray):
         S = Tensor.from_ndarray(S)
         # Truncate, if truncation dimensions are given.
         chi, rel_err = type(self).find_trunc_dim(
-            S, chis=chis, eps=eps, break_degenerate=break_degenerate,
-            degeneracy_eps=degeneracy_eps, trunc_err_func=trunc_err_func,
-            norm_sq=norm_sq)
+            S,
+            chis=chis,
+            eps=eps,
+            break_degenerate=break_degenerate,
+            degeneracy_eps=degeneracy_eps,
+            trunc_err_func=trunc_err_func,
+            norm_sq=norm_sq,
+        )
         # Truncate
         S = S[:chi]
-        U = U[:,:chi]
-        V = V[:chi,:]
+        U = U[:, :chi]
+        V = V[:chi, :]
         if print_errors > 0:
-            print('Relative truncation error in SVD: %.3e' % rel_err)
+            print("Relative truncation error in SVD: %.3e" % rel_err)
         if not isinstance(U, TensorCommon):
             U = type(self).from_ndarray(U)
         if not isinstance(V, TensorCommon):
             V = type(self).from_ndarray(V)
         return U, S, V, rel_err
-
