@@ -570,8 +570,7 @@ class AbelianTensor(TensorCommon):
         return res
 
     def any(self):
-        """Check whether any of the elements of the tensor are True.
-        """
+        """Check whether any of the elements of the tensor are True."""
         for v in self.sects.values():
             if np.any(v):
                 return True
@@ -581,8 +580,7 @@ class AbelianTensor(TensorCommon):
             return np.any(self.defval)
 
     def all(self):
-        """Check whether all of the elements of the tensor are True.
-        """
+        """Check whether all of the elements of the tensor are True."""
         for v in self.sects.values():
             if not np.all(v):
                 return False
