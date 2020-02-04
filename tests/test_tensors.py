@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import warnings
 from ncon import ncon
-from tensors.tests.ndarray_svd import svd, eig
+from .ndarray_svd import svd, eig
 from tensors import Tensor
 from tensors import TensorZ2, TensorU1, TensorZ3
 
@@ -14,7 +14,8 @@ from tensors import TensorZ2, TensorU1, TensorZ3
 # TODO Decide whether to do something like this: (see pytest documentation)
 # warnings.simplefilter("error", UserWarning)
 # TODO This should not be a global constant. Figure out what to do about the
-# whole randomness thing.
+# whole randomness thing. Maybe use this:
+# https://pypi.org/project/pytest-repeat/
 n_iters = 500
 
 
