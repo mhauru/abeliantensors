@@ -1,4 +1,5 @@
 # Tensors
+[![][travis-img]][travis-url] [![][codecov-img]][codecov-url]
 
 Tensors is a Python 3 package that implements Abelian symmetry preserving
 tensors, as described in
@@ -69,3 +70,8 @@ Do the thing                             Do the thing
 Fancy tensor --- map to numpy ndarray ---> ndarray
 ```
 
+
+[travis-img]: https://travis-ci.org/mhauru/tensors.svg?branch=master
+[travis-url]: https://travis-ci.org/mhauru/tensors
+[codecov-img]: https://codecov.io/gh/mhauru/tensors/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/mhauru/tensors
