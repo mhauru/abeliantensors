@@ -13,5 +13,3 @@ install:
 script: coverage run -m pytest
 after_success:
   - codecov
-
-
