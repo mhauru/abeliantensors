@@ -1,5 +1,5 @@
 import numpy as np
-import collections
+from collections.abc import Iterable
 
 
 def svd(
@@ -44,11 +44,11 @@ def svd(
     """
 
     # We want to deal with lists, not tuples or bare integers
-    if isinstance(a, collections.Iterable):
+    if isinstance(a, Iterable):
         a = list(a)
     else:
         a = [a]
-    if isinstance(b, collections.Iterable):
+    if isinstance(b, Iterable):
         b = list(b)
     else:
         b = [b]
@@ -83,7 +83,7 @@ def svd(
         else:
             chis = [max_dim]
     else:
-        if isinstance(chis, collections.Iterable):
+        if isinstance(chis, Iterable):
             chis = list(chis)
         else:
             chis = [chis]
@@ -179,11 +179,11 @@ def eig(
     the legs b of T.
     """
     # We want to deal with lists, not tuples or bare integers
-    if isinstance(a, collections.Iterable):
+    if isinstance(a, Iterable):
         a = list(a)
     else:
         a = [a]
-    if isinstance(b, collections.Iterable):
+    if isinstance(b, Iterable):
         b = list(b)
     else:
         b = [b]
@@ -225,7 +225,7 @@ def eig(
         else:
             chis = [max_dim]
     else:
-        if isinstance(chis, collections.Iterable):
+        if isinstance(chis, Iterable):
             chis = list(chis)
         else:
             chis = [chis]

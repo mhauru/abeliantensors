@@ -1,9 +1,6 @@
 import numpy as np
-import collections
-import itertools
-import sys
-from functools import reduce
 from .abeliantensor import AbelianTensor
+from collections.abc import Iterable
 
 
 class TensorZQ(AbelianTensor):
@@ -70,7 +67,7 @@ class TensorZQ(AbelianTensor):
     def split_indices(self, indices, dims, qims=None, dirs=None):
         # Buildind qims.
         if qims is None:
-            if isinstance(indices, collections.Iterable):
+            if isinstance(indices, Iterable):
                 qims = [type(self).shape_to_qhape(dim) for dim in dims]
             else:
                 qims = type(self).shape_to_qhape(dims)

@@ -1,10 +1,9 @@
 import numpy as np
-import collections
-import itertools
 import operator as opr
 import functools as fct
 import scipy.sparse.linalg as spsla
 from .tensorcommon import TensorCommon
+from collections.abc import Iterable
 
 
 class Tensor(TensorCommon, np.ndarray):
@@ -231,7 +230,7 @@ class Tensor(TensorCommon, np.ndarray):
         The method does not modify the original tensor.
         """
         # Format index_batches to be a list of lists of indices.
-        if isinstance(inds[0], collections.Iterable):
+        if isinstance(inds[0], Iterable):
             index_batches = list(map(list, inds))
         else:
             index_batches = [list(inds)]
@@ -285,7 +284,7 @@ class Tensor(TensorCommon, np.ndarray):
         """
         # Formatting the input so that indices is a list and dim_batches is a
         # list of lists.
-        if isinstance(indices, collections.Iterable):
+        if isinstance(indices, Iterable):
             assert len(indices) == len(dims)
             indices = list(indices)
             dim_batches = list(map(list, dims))

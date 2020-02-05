@@ -1,8 +1,8 @@
 import numpy as np
-import collections
 import itertools as itt
 import functools as fct
 import warnings
+from collections.abc import Iterable
 
 
 class TensorCommon:
@@ -183,11 +183,11 @@ class TensorCommon:
         """
         # We want to deal with lists, not tuples or bare integers
         a, b = indices
-        if isinstance(a, collections.Iterable):
+        if isinstance(a, Iterable):
             a = list(a)
         else:
             a = [a]
-        if isinstance(b, collections.Iterable):
+        if isinstance(b, Iterable):
             b = list(b)
         else:
             b = [b]
@@ -275,9 +275,9 @@ class TensorCommon:
 
         The original tensor is not modified by this method.
         """
-        if not isinstance(a, collections.Iterable):
+        if not isinstance(a, Iterable):
             a = (a,)
-        if not isinstance(b, collections.Iterable):
+        if not isinstance(b, Iterable):
             b = (b,)
         (
             self,
@@ -335,9 +335,9 @@ class TensorCommon:
 
         The original tensor is not modified by this method.
         """
-        if not isinstance(a, collections.Iterable):
+        if not isinstance(a, Iterable):
             a = (a,)
-        if not isinstance(b, collections.Iterable):
+        if not isinstance(b, Iterable):
             b = (b,)
 
         (

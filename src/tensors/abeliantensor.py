@@ -1,5 +1,4 @@
 import numpy as np
-import collections
 import heapq
 import warnings
 import itertools as itt
@@ -8,6 +7,7 @@ import operator as opr
 import scipy.sparse.linalg as spsla
 from copy import deepcopy
 from .tensorcommon import TensorCommon
+from collections.abc import Iterable
 
 
 def generate_binary_deferer(op_func):
@@ -1128,7 +1128,7 @@ class AbelianTensor(TensorCommon):
         The method does not modify the original tensor.
         """
         # Format index_batches to be a list of lists of indices.
-        if isinstance(inds[0], collections.Iterable):
+        if isinstance(inds[0], Iterable):
             index_batches = list(map(list, inds))
         else:
             index_batches = [list(inds)]
@@ -1142,7 +1142,7 @@ class AbelianTensor(TensorCommon):
             )
             dirs = [1] * len(index_batches)
         else:
-            if not isinstance(dirs, collections.Iterable):
+            if not isinstance(dirs, Iterable):
                 dirs = [dirs]
             assert len(dirs) == len(index_batches)
 
@@ -1342,7 +1342,7 @@ class AbelianTensor(TensorCommon):
         """
         # Formatting the input so that indices is a list and dim_batches and
         # dim_batches are lists of lists.
-        if isinstance(indices, collections.Iterable):
+        if isinstance(indices, Iterable):
             assert len(indices) == len(dims) == len(qims)
             indices = list(indices)
             dim_batches = list(map(list, dims))
