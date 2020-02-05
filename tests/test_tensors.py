@@ -11,8 +11,6 @@ from tensors import TensorZ2, TensorU1, TensorZ3
 
 # TODO Make tests to run, classes to run on, and number of iterations
 # choosable.
-# TODO Decide whether to do something like this: (see pytest documentation)
-# warnings.simplefilter("error", UserWarning)
 # TODO This should not be a global constant. Figure out what to do about the
 # whole randomness thing. Maybe use this:
 # https://pypi.org/project/pytest-repeat/
