@@ -21,8 +21,8 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
     ],
-    keywords=["tensor", "tensor network", "linear algebra"],
+    keywords=["tensor", "tensor networks", "linear algebra"],
     install_requires=["scipy>=1.0.0"],
-    extras_require={"test": ["pytest", "coverage"]},
+    extras_require={"test": ["ncon", "pytest", "coverage"]},
     python_requires=">=3.6",
 )
