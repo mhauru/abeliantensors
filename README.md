@@ -12,14 +12,14 @@ for use in tensor network algorithms, and works well with the
 
 If you just want to use the library:
 ```
-pip install --user https://github.com/mhauru/tensors
+pip install --user git+https://github.com/mhauru/tensors
 ```
 
 If you also want to modify and develop the library
 ```
 git clone https://github.com/mhauru/tensors
 cd tensors
-pip install --user .[test]
+pip install --user -e .[test]
 ```
 after which you can run the test suite by just calling `pytest`.
 
