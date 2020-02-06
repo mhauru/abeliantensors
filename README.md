@@ -3,8 +3,8 @@
 
 Tensors is a Python 3 package that implements U(1) and Zn symmetry preserving
 tensors, as described by Singh et al. in
-[arxiv 0907.2994](https://arxiv.org/abs/0907.2994) and
-[arxiv 1008.4774](https://arxiv.org/abs/1008.4774). Tensors has been designed
+[arXiv: 0907.2994](https://arxiv.org/abs/0907.2994) and
+[arXiv: 1008.4774](https://arxiv.org/abs/1008.4774). Tensors has been designed
 for use in tensor network algorithms, and works well with the
 [ncon function](https://github.com/mhauru/ncon).
 
@@ -43,7 +43,7 @@ pieces of shape data:
   dimensions 5 x 9, where the first 2 rows and 5 columns are associated with
   one of the two irreps of Z2, and the remaining 3 rows and 4 columns with the
   other.
-* 'qhape` is like `shape`, but lists the irrep charges instead of the
+* `qhape` is like `shape`, but lists the irrep charges instead of the
   dimensions. In the above example `qhape=[[0,1], [0,1]]` would mark the first
   part of both the row and column space to belong to the trivial irrep of
   charge 0, and the second part to the irrep with charge 1. For Zn the possible
@@ -57,12 +57,13 @@ pieces of shape data:
 Note that each element of the tensor is associated with one irrep charge for
 each of the indices. The symmetry property is then that an element can only be
 non-zero if the charges from each index, multiplied by the direction of that
-index, add up to the charge of the tensor. Addition for Zn tensors is modulo n.
-So for instance for a `charge=0` `TensorZ2` object this means that the charges
-on each leg must add up to an even number for an element to be non-zero. The
-whole point of this library is to store and use such symmetric tensors in an
-efficient way, where we don't waste memory or computation time on the elements
-we know are zero by symmetry, and can't accidentally let them be non-zero.
+index, add up to the charge of the tensor. Addition of charges for Zn tensors
+is modulo n.  So for instance for a `charge=0` `TensorZ2` object this means
+that the charges on each leg must add up to an even number for an element to be
+non-zero. The whole point of this library is to store and use such symmetric
+tensors in an efficient way, where we don't waste memory or computation time on
+the elements we know are zero by symmetry, and can't accidentally let them be
+non-zero.
 
 Here's a simple nonsense example of how tensors can be used:
 ```
@@ -93,13 +94,13 @@ U, S, V = a.svd([0, 2], [1, 3])
 # You can also do a truncated SVD, in this case to truncating to dimension 4.
 U, S, V = a.svd([0, 2], [1, 3], chis=4)
 
-# We can contract some tensors together easily using the ncon package.
+# We can contract tensors together easily using the ncon package.
 # Note that conjugation flips the direction of each index, as well as the
 # charge of the tensor, which in this case though is 0.
 from ncon import ncon
-
 aadg = ncon((a, a.conjugate()), ([1, 2, -1, -2], [1, 2, -11, -12]))
-# Finally, knowing that this tensor is Hermitian, do an eigenvalue
+
+# Finally, knowing that aadg is Hermitian, do an eigenvalue
 # decomposition of it, this time truncating not to a specific dimension, but
 # to a maximum relative truncation error of 1e-5.
 E, U = aadg.eig([0, 1], [2, 3], hermitian=True, eps=1e-5)
@@ -137,18 +138,19 @@ eigenvalue decompositions of tensors.
 Z2, Z3 and U(1), check this file to see how you could add what you need.
 
 `tests`: Plenty of tests for the various classes. The tests require the [ncon
-package](https://github.com/mhauru/ncon). Most of the tests are based on
-generating a random instance of one of the "fancy" tensor classes in this
-package, and confirming that the following diagram commutes:
+package](https://github.com/mhauru/ncon), which pip automatically installs for
+you. Most of the tests are based on generating a random instance of one of the
+"fancy" tensor classes in this package, and confirming that the following
+diagram commutes:
 ```
-Fancy tensor --- map to numpy ndarray ---> ndarray
-    |                                         |
-    |                                         |
+Fancy tensor ─── map to numpy ndarray ───> ndarray
+    │                                         │
+    │                                         │
 Do the thing                             Do the thing
-    |                                         |
-    |                                         |
+    │                                         │
+    │                                         │
     V                                         V
-Fancy tensor --- map to numpy ndarray ---> ndarray
+Fancy tensor ─── map to numpy ndarray ───> ndarray
 ```
 
 
