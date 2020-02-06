@@ -1827,7 +1827,7 @@ class AbelianTensor(TensorCommon):
                 m = min(shp)
                 u = np.empty((shp[0], m), dtype=U_dtype)
                 s = np.empty((m,), dtype=S_dtype)
-                eigdecomp = (u, s)  # TODO is that a bug?
+                eigdecomp = (s, u)
             eigdecomps[k] = eigdecomp
             dims[k] = 0
             all_eigs.append(s)
@@ -1836,7 +1836,6 @@ class AbelianTensor(TensorCommon):
         try:
             all_eigs = np.concatenate(all_eigs)
         except ValueError:
-            # all_eigs == []  # TODO What's up here?
             all_eigs = np.array((0,))
 
         if sparse:
