@@ -114,6 +114,9 @@ class Tensor(TensorCommon, np.ndarray):
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Miscellaneous
 
+    def isscalar(self):
+        return not bool(self.shape)
+
     def compatible_indices(self, other, i, j):
         return self.shape[i] == other.shape[j]
 
@@ -129,7 +132,7 @@ class Tensor(TensorCommon, np.ndarray):
 
     def value(self):
         """For a scalar tensor, return the scalar."""
-        if self.shape:
+        if not self.isscalar():
             raise ValueError("value called on a non-scalar tensor.")
         else:
             return self[()]
