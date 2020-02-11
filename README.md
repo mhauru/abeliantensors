@@ -19,7 +19,7 @@ If you also want to modify and develop the library
 ```
 git clone https://github.com/mhauru/abeliantensors
 cd abeliantensors
-pip install --user -e .[test]
+pip install --user -e .[tests]
 ```
 after which you can run the test suite by just calling `pytest`.
 
