@@ -399,8 +399,6 @@ class TensorCommon:
         error so allows. Thus max(chis) should be much smaller than the full
         size of the matrix, if sparse is True.
 
-        If print_errors > 0 then the truncation error is printed.
-
         If return_rel_err is True then the relative truncation error is also
         returned.
 

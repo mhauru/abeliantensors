@@ -427,7 +427,7 @@ class Tensor(TensorCommon, np.ndarray):
         self,
         chis=None,
         eps=0,
-        print_errors=0,
+        print_errors="deprecated",
         hermitian=False,
         break_degenerate=False,
         degeneracy_eps=1e-6,
@@ -452,6 +452,13 @@ class Tensor(TensorCommon, np.ndarray):
         The output is in the form S, U, where S is a vector of eigenvalues and
         U is a matrix that has as its columns the eigenvectors.
         """
+        if print_errors != "deprecated":
+            msg = (
+                "The `print_errors` keyword argument has been deprecated, "
+                "and has no effect. Rely instead on getting the error as a "
+                "return value, and print it yourself."
+            )
+            warnings.warn(msg)
         chis = self._matrix_decomp_format_chis(chis, eps)
         mindim = min(self.shape)
         maxchi = max(chis)
@@ -483,8 +490,6 @@ class Tensor(TensorCommon, np.ndarray):
         # Truncate
         S = S[:chi]
         U = U[:, :chi]
-        if print_errors > 0:
-            print("Relative truncation error in eig: %.3e" % rel_err)
         if not isinstance(S, TensorCommon):
             S = type(self).from_ndarray(S)
         if not isinstance(U, TensorCommon):
@@ -495,7 +500,7 @@ class Tensor(TensorCommon, np.ndarray):
         self,
         chis=None,
         eps=0,
-        print_errors=0,
+        print_errors="deprecated",
         break_degenerate=False,
         degeneracy_eps=1e-6,
         sparse=False,
@@ -528,13 +533,18 @@ class Tensor(TensorCommon, np.ndarray):
         truncation error so allows. Thus max(chis) should be much smaller than
         the full size of the matrix, if sparse is True.
 
-        If print_errors > 0 truncation error is printed.
-
         The method returns the tuple U, S, V, rel_err, where S is a vector and
         U and V are unitary matrices. They are such that U.diag(S).V == self,
         where the equality is appromixate if there is truncation. rel_err is
         the truncation error.
         """
+        if print_errors != "deprecated":
+            msg = (
+                "The `print_errors` keyword argument has been deprecated, "
+                "and has no effect. Rely instead on getting the error as a "
+                "return value, and print it yourself."
+            )
+            warnings.warn(msg)
         chis = self._matrix_decomp_format_chis(chis, eps)
         mindim = min(self.shape)
         maxchi = max(chis)
@@ -559,8 +569,6 @@ class Tensor(TensorCommon, np.ndarray):
         S = S[:chi]
         U = U[:, :chi]
         V = V[:chi, :]
-        if print_errors > 0:
-            print("Relative truncation error in SVD: %.3e" % rel_err)
         if not isinstance(U, TensorCommon):
             U = type(self).from_ndarray(U)
         if not isinstance(V, TensorCommon):

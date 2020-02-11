@@ -1860,7 +1860,7 @@ class AbelianTensor(TensorCommon):
         self,
         chis=None,
         eps=0,
-        print_errors=0,
+        print_errors="deprecated",
         hermitian=False,
         break_degenerate=False,
         degeneracy_eps=1e-6,
@@ -1888,6 +1888,13 @@ class AbelianTensor(TensorCommon):
         eigenvalues and U is a matrix that has as its columns the eigenvectors.
         Both have the same dim and qim as self.
         """
+        if print_errors != "deprecated":
+            msg = (
+                "The `print_errors` keyword argument has been deprecated, "
+                "and has no effect. Rely instead on getting the error as a "
+                "return value, and print it yourself."
+            )
+            warnings.warn(msg)
         chis = self._matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)
         assert self.defval == 0
@@ -1970,9 +1977,6 @@ class AbelianTensor(TensorCommon):
             norm_sq=norm_sq,
         )
 
-        if print_errors > 0:
-            print("Relative truncation error in eig: %.3e" % rel_err)
-
         # Truncate each block and create the dim for the new index.
         new_dim = []
         new_qim = []
@@ -2018,7 +2022,7 @@ class AbelianTensor(TensorCommon):
         self,
         chis=None,
         eps=0,
-        print_errors=0,
+        print_errors="deprecated",
         break_degenerate=False,
         degeneracy_eps=1e-6,
         sparse=False,
@@ -2053,8 +2057,6 @@ class AbelianTensor(TensorCommon):
         truncation error so allows. Thus max(chis) should be much smaller than
         the full size of the matrix, if sparse is True.
 
-        If print_errors > 0 truncation error is printed.
-
         The method returns the tuple U, S, V, rel_err, where S is a
         non-invariant vector and U and V are unitary matrices. They are such
         that U.diag(S).V = self, where the equality is appromixate if there is
@@ -2062,6 +2064,13 @@ class AbelianTensor(TensorCommon):
         self. U has dirs [d,-d] where d = self.dirs[0], but V has the same dirs
         as self. rel_err is the truncation error.
         """
+        if print_errors != "deprecated":
+            msg = (
+                "The `print_errors` keyword argument has been deprecated, "
+                "and has no effect. Rely instead on getting the error as a "
+                "return value, and print it yourself."
+            )
+            warnings.warn(msg)
         chis = self._matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)
         assert self.defval == 0
@@ -2126,9 +2135,6 @@ class AbelianTensor(TensorCommon):
             trunc_err_func=trunc_err_func,
             norm_sq=norm_sq,
         )
-
-        if print_errors > 0:
-            print("Relative truncation error in SVD: %.3e" % rel_err)
 
         # Truncate each block and create the dim for the new index.
         new_dim = []

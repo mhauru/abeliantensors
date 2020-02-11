@@ -8,7 +8,6 @@ def svd(
     b,
     chis=None,
     eps=0,
-    print_errors=0,
     return_rel_err=False,
     break_degenerate=False,
     degeneracy_eps=1e-6,
@@ -33,9 +32,6 @@ def svd(
     break_degenerate=True. The default threshold for when singular values are
     considered degenerate is 1e-6. This can be changed with the keyword
     argument degeneracy_eps.
-
-    If print_errors > 0 truncation errors are printed, with more information as
-    print_errors increases through 1,2 and 3.
 
     By default the function returns the tuple (U,s,V), where in matrix terms
     U.diag(s).V = T, where the equality is appromixate if there is truncation.
@@ -121,31 +117,6 @@ def svd(
     U = U[:, :chi]
     V = V[:chi, :]
 
-    if print_errors > 0:
-        print("----- Tensor SVD error -----")
-        print(
-            "- Relative truncation error (Frobenius norm) from the "
-            "singular values: %.3e" % np.sqrt(rel_err_sq)
-        )
-        if print_errors > 3:
-            print("- sum(|s^2_discarded|): %.3e" % sum_disc_sq)
-            print("- sum(|s^2_all|): %.3e" % sum_all_sq)
-        if print_errors > 2:
-            # Reconstruct the original T_matrix with the truncated U, s, V and
-            # print the error in the reconstruction. The error is computed as
-            # the Frobenius norm so it should match the ratio of the discarded
-            # eigenvalues printed earlier.
-            reco = np.einsum("ij,j->ij", U, s)
-            reco = np.dot(reco, V)
-            reco_err = np.linalg.norm(T_matrix - reco)
-            normalization = np.linalg.norm(T_matrix)
-            reco_rel_err = reco_err / normalization
-            print(
-                "- Relative truncation error (Frobenius norm) from a "
-                "reconstruction: %.3e" % reco_rel_err
-            )
-        print("----------------------------")
-
     # Reshape U and V to tensors with shapes matching the shape of T and
     # return.
     U_tens = np.reshape(U, shp_a + (-1,))
@@ -162,7 +133,6 @@ def eig(
     b,
     chis=None,
     eps=0,
-    print_errors=0,
     return_rel_err=False,
     hermitian=False,
     break_degenerate=False,
@@ -261,16 +231,6 @@ def eig(
     # Truncate
     S = S[:chi]
     U = U[:, :chi]
-
-    if print_errors > 0:
-        print("----- Tensor SVD error -----")
-        print(
-            "- Relative truncation error (Frobenius norm) from the "
-            "singular values: %.3e" % np.sqrt(rel_err_sq)
-        )
-        if print_errors > 3:
-            print("- sum(|S^2_discarded|): %.3e" % sum_disc_abs_sq)
-            print("- sum(|S^2_all|): %.3e" % sum_all_abs_sq)
 
     # Reshape U to a tensor with shape matching the shape of T and return.
     U_tens = np.reshape(U, shp_a + (-1,))
