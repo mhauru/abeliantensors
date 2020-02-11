@@ -26,6 +26,7 @@ setuptools.setup(
     extras_require={
         "tests": ["ncon", "pytest", "coverage"],
         "demo": ["ncon", "timeit", "matplotlib", "seaborn"],
+        "doc": ["sphinx", "sphinx_rtd_theme", "recommonmark"],
     },
     python_requires=">=3.6",
 )

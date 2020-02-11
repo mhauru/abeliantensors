@@ -1,4 +1,4 @@
-# abeliantensors
+# Introduction
 [![][travis-img]][travis-url] [![][codecov-img]][codecov-url]
 
 abeliantensors is a Python 3 package that implements U(1) and Zn symmetry preserving
@@ -36,19 +36,19 @@ preserving tensors by simply changing the class that is imported.
 Each symmetric tensor has, in addition to its tensor elements, the following
 pieces of what we call form data:
 * `shape` describes the dimensions of the tensors, just like with numpy arrays.
-  The difference is that for each index, the dimension isn't just a number, but
-  a list of numbers, that sets how the vector space is partitioned by the
-  irreducible representations (irreps) of the symmetry. So for instance
-  `shape=[[2,3], [5,4]]` could be the shape of a Z2 symmetric matrix of
-  dimensions 5 x 9, where the first 2 rows and 5 columns are associated with
-  one of the two irreps of Z2, and the remaining 3 rows and 4 columns with the
-  other.
+  The difference is that for symmetric tensors the dimension of each index
+  isn't just a number, but a list of numbers, that sets how the vector space is
+  partitioned by the irreducible representations (irreps) of the symmetry. So
+  for instance `shape=[[2,3], [5,4]]` could be the shape of a Z2 symmetric
+  matrix of dimensions 5 x 9, where the first 2 rows and 5 columns are
+  associated with one of the two irreps of Z2, and the remaining 3 rows and 4
+  columns with the other.
 * `qhape` is like `shape`, but lists the irrep charges instead of the
-  dimensions. Irrep charges are often also called quantum numbers. In the above
-  example `qhape=[[0,1], [0,1]]` would mark the first part of both the row and
-  column space to belong to the trivial irrep of charge 0, and the second part
-  to the irrep with charge 1. For Zn the possible charges are 0, 1, ..., n, for
-  U(1) they are all positive and negative integers.
+  dimensions. Irrep charges are often also called quantum numbers, hence the q.
+  In the above example `qhape=[[0,1], [0,1]]` would mark the first part of both
+  the row and column space to belong to the trivial irrep of charge 0, and the
+  second part to the irrep with charge 1. For Zn the possible charges are 0, 1,
+  ..., n, for U(1) they are all positive and negative integers.
 * `dirs` is a list of 1s and -1s, that gives a direction to each index: either
   1 for outgoing or -1 for ingoing.
 * `charge` is an integer, the irrep charge associated to tensor. In most cases
@@ -58,8 +58,8 @@ Note that each element of the tensor is associated with one irrep charge for
 each of the indices. The symmetry property is then that an element can only be
 non-zero if the charges from each index, multiplied by the direction of that
 index, add up to the charge of the tensor. Addition of charges for Zn tensors
-is modulo n.  So for instance for a `charge=0` `TensorZ2` object this means
-that the charges on each leg must add up to an even number for an element to be
+is modulo n. For instance for a `charge=0` `TensorZ2` object this means that
+the charges on each leg must add up to an even number for an element to be
 non-zero. The whole point of this library is to store and use such symmetric
 tensors in an efficient way, where we don't waste memory or computation time on
 the elements we know are zero by symmetry, and can't accidentally let them be
@@ -106,8 +106,8 @@ aadg = ncon((a, a.conjugate()), ([1, 2, -1, -2], [1, 2, -11, -12]))
 E, U = aadg.eig([0, 1], [2, 3], hermitian=True, eps=1e-5)
 ```
 
-There are many other user-facing methods and features, but for more details,
-see the docstrings in the package.
+There are many other user-facing methods and features, for more, see
+the [API docs](https://abeliantensors.readthedocs.io/en/latest/).
 
 ## Design and structure
 
