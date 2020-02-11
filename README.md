@@ -34,7 +34,7 @@ between utilizing and not utilizing the symmetry preserving tensors by simply
 changing the class that is imported.
 
 Each symmetric tensor has, in addition to its tensor elements, the following
-pieces of shape data:
+pieces of what we call form data:
 * `shape` describes the dimensions of the tensors, just like with numpy arrays.
   The difference is that for each index, the dimension isn't just a number, but
   a list of numbers, that sets how the vector space is partitioned by the
@@ -44,11 +44,11 @@ pieces of shape data:
   one of the two irreps of Z2, and the remaining 3 rows and 4 columns with the
   other.
 * `qhape` is like `shape`, but lists the irrep charges instead of the
-  dimensions. In the above example `qhape=[[0,1], [0,1]]` would mark the first
-  part of both the row and column space to belong to the trivial irrep of
-  charge 0, and the second part to the irrep with charge 1. For Zn the possible
-  charges are 0, 1, ..., n, for U(1) they are all positive and negative
-  integers.
+  dimensions. Irrep charges are often also called quantum numbers. In the above
+  example `qhape=[[0,1], [0,1]]` would mark the first part of both the row and
+  column space to belong to the trivial irrep of charge 0, and the second part
+  to the irrep with charge 1. For Zn the possible charges are 0, 1, ..., n, for
+  U(1) they are all positive and negative integers.
 * `dirs` is a list of 1s and -1s, that gives a direction to each index: either
   1 for outgoing or -1 for ingoing.
 * `charge` is an integer, the irrep charge associated to tensor. In most cases
