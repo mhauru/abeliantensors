@@ -24,7 +24,7 @@ setuptools.setup(
     keywords=["tensor", "tensor networks", "linear algebra"],
     install_requires=["scipy>=1.0.0"],
     extras_require={
-        "tests": ["ncon", "pytest", "coverage"],
+        "tests": ["ncon", "pytest", "pytest-randomly", "coverage"],
         "demo": ["ncon", "timeit", "matplotlib", "seaborn"],
         "doc": ["sphinx", "sphinx_rtd_theme", "recommonmark"],
     },
