@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from tensors import Tensor
-from tensors import TensorZ2, TensorU1, TensorZ3
+from abeliantensors import Tensor
+from abeliantensors import TensorZ2, TensorU1, TensorZ3
 
 
 @pytest.fixture(scope="module")

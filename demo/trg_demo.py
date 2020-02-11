@@ -7,7 +7,7 @@ from scipy import integrate
 from ncon import ncon
 from matplotlib import pyplot as plt
 import seaborn as sns
-from tensors import Tensor, TensorZ2
+from abeliantensors import Tensor, TensorZ2
 from trg import trg_step
 
 

@@ -1,10 +1,10 @@
-# Tensors
+# abeliantensors
 [![][travis-img]][travis-url] [![][codecov-img]][codecov-url]
 
-Tensors is a Python 3 package that implements U(1) and Zn symmetry preserving
+abeliantensors is a Python 3 package that implements U(1) and Zn symmetry preserving
 tensors, as described by Singh et al. in
 [arXiv: 0907.2994](https://arxiv.org/abs/0907.2994) and
-[arXiv: 1008.4774](https://arxiv.org/abs/1008.4774). Tensors has been designed
+[arXiv: 1008.4774](https://arxiv.org/abs/1008.4774). abeliantensors has been designed
 for use in tensor network algorithms, and works well with the
 [ncon function](https://github.com/mhauru/ncon).
 
@@ -12,26 +12,26 @@ for use in tensor network algorithms, and works well with the
 
 If you just want to use the library:
 ```
-pip install --user git+https://github.com/mhauru/tensors
+pip install --user git+https://github.com/mhauru/abeliantensors
 ```
 
 If you also want to modify and develop the library
 ```
-git clone https://github.com/mhauru/tensors
-cd tensors
+git clone https://github.com/mhauru/abeliantensors
+cd abeliantensors
 pip install --user -e .[test]
 ```
 after which you can run the test suite by just calling `pytest`.
 
 ## Usage
 
-Tensors exports classes `TensorU1`, `TensorZ2`, and `TensorZ3`. Other cyclic
-groups Zn can be implemented with one-liners, see the file `symmetrytensors.py`
-for examples. Tensors also exports a class called `Tensor`, that is just a
-wrapper around regular numpy ndarrays, but that implements the exact same
-interface as the symmetric tensor classes. This allows for easy switching
-between utilizing and not utilizing the symmetry preserving tensors by simply
-changing the class that is imported.
+abeliantensors exports classes `TensorU1`, `TensorZ2`, and `TensorZ3`. Other
+cyclic groups Zn can be implemented with one-liners, see the file
+`symmetrytensors.py` for examples. abeliantensors also exports a class called
+`Tensor`, that is just a wrapper around regular numpy ndarrays, but that
+implements the exact same interface as the symmetric tensor classes. This
+allows for easy switching between utilizing and not utilizing the symmetry
+preserving tensors by simply changing the class that is imported.
 
 Each symmetric tensor has, in addition to its tensor elements, the following
 pieces of what we call form data:
@@ -65,10 +65,10 @@ tensors in an efficient way, where we don't waste memory or computation time on
 the elements we know are zero by symmetry, and can't accidentally let them be
 non-zero.
 
-Here's a simple nonsense example of how tensors can be used:
+Here's a simple nonsense example of how abeliantensors can be used:
 ```
 import numpy as np
-from tensors import TensorZ2
+from abeliantensors import TensorZ2
 
 # Create a symmetric tensor from an ndarray. All elements that should be zero
 # by symmetry are simply discarded, whether they are zero or not.
@@ -154,7 +154,7 @@ Fancy tensor ─── map to numpy ndarray ───> ndarray
 ```
 
 
-[travis-img]: https://travis-ci.org/mhauru/tensors.svg?branch=master
-[travis-url]: https://travis-ci.org/mhauru/tensors
-[codecov-img]: https://codecov.io/gh/mhauru/tensors/branch/master/graph/badge.svg
-[codecov-url]: https://codecov.io/gh/mhauru/tensors
+[travis-img]: https://travis-ci.org/mhauru/abeliantensors.svg?branch=master
+[travis-url]: https://travis-ci.org/mhauru/abeliantensors
+[codecov-img]: https://codecov.io/gh/mhauru/abeliantensors/branch/master/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/mhauru/abeliantensors

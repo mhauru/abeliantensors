@@ -1,7 +1,7 @@
 import numpy as np
 from ncon import ncon
 from .ndarray_svd import svd, eig
-from tensors import Tensor
+from abeliantensors import Tensor
 
 # TODO This should not be a global constant. Figure out what to do about the
 # whole randomness thing. Maybe use this:
