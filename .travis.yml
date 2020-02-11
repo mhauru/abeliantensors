@@ -9,7 +9,7 @@ before_install:
   - pip install -U pytest
   - pip install codecov
 install:
-  - pip install ".[test]"
+  - pip install ".[tests]"
 script: coverage run -m pytest
 after_success:
   - codecov
