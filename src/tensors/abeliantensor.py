@@ -753,7 +753,7 @@ class AbelianTensor(TensorCommon):
             )
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # To and from normal numpy arrays
+    # To and from numpy arrays
 
     def to_ndarray(self):
         """Return a corresponding numpy array.
@@ -1888,7 +1888,7 @@ class AbelianTensor(TensorCommon):
         eigenvalues and U is a matrix that has as its columns the eigenvectors.
         Both have the same dim and qim as self.
         """
-        chis = self.matrix_decomp_format_chis(chis, eps)
+        chis = self._matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)
         assert self.defval == 0
         assert self.invar
@@ -2062,7 +2062,7 @@ class AbelianTensor(TensorCommon):
         self. U has dirs [d,-d] where d = self.dirs[0], but V has the same dirs
         as self. rel_err is the truncation error.
         """
-        chis = self.matrix_decomp_format_chis(chis, eps)
+        chis = self._matrix_decomp_format_chis(chis, eps)
         maxchi = max(chis)
         assert self.defval == 0
         assert self.invar
