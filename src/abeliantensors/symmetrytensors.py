@@ -115,7 +115,7 @@ class TensorZ2(TensorZN):
 
 
 class TensorZ3(TensorZN):
-    """A class for Z2 symmetric tensors.
+    """A class for Z3 symmetric tensors.
 
     See the parent class AbelianTensor for details.
     """
