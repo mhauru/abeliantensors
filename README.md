@@ -1,5 +1,7 @@
 # Introduction
-[![][travis-img]][travis-url] [![][codecov-img]][codecov-url]
+[![Documentation Status][rtd-badge]][rtd-url]
+[![][travis-img]][travis-url]
+[![][codecov-img]][codecov-url]
 
 abeliantensors is a Python 3 package that implements U(1) and Zn symmetry preserving
 tensors, as described by Singh et al. in
@@ -158,3 +160,5 @@ Fancy tensor ─── map to numpy ndarray ───> ndarray
 [travis-url]: https://travis-ci.org/mhauru/abeliantensors
 [codecov-img]: https://codecov.io/gh/mhauru/abeliantensors/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/mhauru/abeliantensors
+[rtd-badge]: https://readthedocs.org/projects/abeliantensors/badge/?version=latest
+[rtd-url]: https://abeliantensors.readthedocs.io/en/latest/?badge=latest
