@@ -1,3 +1,8 @@
+"""This module implements a handy interface for doing singular and eigenvalue
+decompositions of numpy ndarrays. It's used by the test suite, to compare with
+results gotten by doing similar decompositions of various instances of
+TensorCommon.
+"""
 import numpy as np
 from collections.abc import Iterable
 

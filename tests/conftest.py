@@ -13,12 +13,20 @@ def tensorclass(request):
 
 
 def pytest_addoption(parser):
-    """Add a command line option for setting the tensorclass(es) to test."""
+    """Add command line options for setting the tensorclass(es) to test and
+    the number of times to repeat each test.
+    """
     parser.addoption(
         "--tensorclass",
         action="append",
         default=[],
         help="Tensor class(es) to run tests on.",
+    )
+    parser.addoption(
+        "--n_iters",
+        type=int,
+        default=100,
+        help="Number of times to run each test on new random input.",
     )
 
 
@@ -41,14 +49,19 @@ def parse_tensorclass(s):
 
 
 def pytest_generate_tests(metafunc):
-    """Set up passing the read command line arguments to the tensorclass
-    fixture, and give its default value.
+    """Set up passing the command line arguments for n_iters and for the
+    tensorclass fixture, and give the latter's default value.
     """
-    default_opts = ["Tensor", "TensorZ2", "TensorU1", "TensorZ3"]
-    tensorclass_opts = metafunc.config.getoption("tensorclass") or default_opts
+    default_classes = ["Tensor", "TensorZ2", "TensorU1", "TensorZ3"]
+    tensorclass_opts = (
+        metafunc.config.getoption("tensorclass") or default_classes
+    )
     tensorclasses = map(parse_tensorclass, tensorclass_opts)
     if "tensorclass" in metafunc.fixturenames:
         metafunc.parametrize("tensorclass", tensorclasses, indirect=True)
+    n_iters = metafunc.config.getoption("n_iters")
+    if "n_iters" in metafunc.fixturenames:
+        metafunc.parametrize("n_iters", [n_iters])
 
 
 @pytest.fixture

@@ -7,11 +7,6 @@ from abeliantensors import Tensor
 # # # # # # # # # # # # # # # # # # # #
 # Utilities that tests use
 
-# TODO This should not be a global constant. Figure out what to do about the
-# whole randomness thing. Maybe use this:
-# https://pypi.org/project/pytest-repeat/
-n_iters = 500
-
 
 def check_with_np(func, T, S, T_np, S_np):
     """Given a function `func` that can take as arguments two `TensorCommon`
@@ -42,7 +37,7 @@ def check_internal_consistency(T):
 
 
 def test_to_and_from_ndarray(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T = rtensor()
@@ -56,7 +51,7 @@ def test_to_and_from_ndarray(
 
 
 def test_arithmetic_and_comparison(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         s = rshape()
@@ -98,7 +93,7 @@ def test_arithmetic_and_comparison(
 
 
 def test_transposing(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T = rtensor(nlow=1)
@@ -126,7 +121,7 @@ def test_transposing(
 
 
 def test_splitting_and_joining(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         # First join and then split two indices, compare with original.
@@ -237,7 +232,7 @@ def test_splitting_and_joining(
 
 
 def test_to_and_from_matrix(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T = rtensor()
@@ -292,7 +287,9 @@ def test_to_and_from_matrix(
         assert (T == T_orig).all()
 
 
-def test_diag(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_diag(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         # Vectors to matrices
         T = rtensor(n=1, invar=False)
@@ -330,7 +327,9 @@ def test_diag(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert T_np_diag.allclose(T_diag)
 
 
-def test_trace(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_trace(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         shp = rshape(nlow=2)
         qhp = rqhape(shape=shp)
@@ -359,7 +358,7 @@ def test_trace(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
 
 
 def test_multiply_diag(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         right = np.random.randint(low=0, high=2)
@@ -391,7 +390,7 @@ def test_multiply_diag(
 
 
 def test_product(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         shp1 = rshape(nlow=1)
@@ -475,7 +474,9 @@ def test_product(
         assert np.allclose(T_np, T.to_ndarray())
 
 
-def test_svd(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_svd(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         T = rtensor(nlow=2, chilow=1)
         T_orig = T.copy()
@@ -561,7 +562,9 @@ def test_svd(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert np.allclose(-np.sort(-S.to_ndarray()), S_np_svd)
 
 
-def test_eig(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_eig(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         n = np.random.randint(low=1, high=3)
         shp = rshape(n=n * 2, chilow=1, chihigh=4)
@@ -718,7 +721,9 @@ def test_eig(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
             assert USV.allclose(T)
 
 
-def test_split(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_split(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         T = rtensor(nlow=2, chilow=1)
         T_orig = T.copy()
@@ -753,7 +758,9 @@ def test_split(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert SV.allclose(split_res[2])
 
 
-def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_norm(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         # Test norm
         shp = rshape()
@@ -771,9 +778,10 @@ def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert np.allclose(T_norm, T_np_norm)
 
 
-def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_max(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
-        # Test min, max and average
         shp = rshape()
         for dim in shp:
             if all([d == 0 for d in dim]):
@@ -785,7 +793,9 @@ def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert T_max == T_np_max
 
 
-def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_min(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         shp = rshape()
         for dim in shp:
@@ -798,7 +808,9 @@ def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert T_min == T_np_min
 
 
-def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_average(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         shp = rshape()
         for dim in shp:
@@ -812,7 +824,7 @@ def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
 
 
 def test_expand_dim(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T = rtensor()
@@ -831,7 +843,9 @@ def test_expand_dim(
         assert T.allclose(T_np_T)
 
 
-def test_eye(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+def test_eye(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
     for iter_num in range(n_iters):
         dim = rshape(n=1)[0]
         qim = rqhape(shape=[dim])[0]
@@ -844,7 +858,7 @@ def test_eye(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
 
 
 def test_flip_dir(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T = rtensor(nlow=1)
@@ -858,7 +872,7 @@ def test_flip_dir(
 
 
 def test_expand_dims_product(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         T1 = rtensor()
@@ -882,7 +896,7 @@ def test_expand_dims_product(
 
 
 def test_ncon_svd_ncon(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
     for iter_num in range(n_iters):
         # Create a random ncon contraction
