@@ -94,16 +94,41 @@ class Tensor(TensorCommon, np.ndarray):
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Methods for slicing, setting and getting elements
 
-    fill = np.ndarray.fill
+    def fill(self, value):
+        """Fill the tensor with a scalar value."""
+        return np.ndarray.fill(self, value)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # Operator methods
 
-    conjugate = np.ndarray.conj
-    abs = np.ndarray.__abs__
-    any = np.ndarray.any
-    all = np.ndarray.all
-    allclose = np.allclose
+    def conjugate(self):
+        """Return the complex conjugate."""
+        return np.ndarray.conj(self)
+
+    def abs(self):
+        """Return the element-wise absolute value."""
+        return np.ndarray.__abs__(self)
+
+    def any(self, *args, **kwargs):
+        """Return whether any elements are True.
+
+        See numpy.ndarray.any for details.
+        """
+        return np.ndarray.any(self, *args, **kwargs)
+
+    def all(self, *args, **kwargs):
+        """Return whether all elements are True.
+
+        See numpy.ndarray.all for details.
+        """
+        return np.ndarray.all(self, *args, **kwargs)
+
+    def allclose(self, other, *args, **kwargs):
+        """Return whether self and other are nearly element-wise equal.
+
+        See numpy.allclose for details.
+        """
+        return np.allclose(self, other, *args, **kwargs)
 
     def log(self):
         """Return the element-wise natural logarithm."""
