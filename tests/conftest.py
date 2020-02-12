@@ -1,3 +1,4 @@
+"""Define utility functions and set up pytest fixtures for the test suite."""
 import pytest
 import numpy as np
 from abeliantensors import Tensor
@@ -6,10 +7,13 @@ from abeliantensors import TensorZ2, TensorU1, TensorZ3
 
 @pytest.fixture(scope="module")
 def tensorclass(request):
+    """A pytest fixture that returns the tensor class currently being tested.
+    """
     return request.param
 
 
 def pytest_addoption(parser):
+    """Add a command line option for setting the tensorclass(es) to test."""
     parser.addoption(
         "--tensorclass",
         action="append",
@@ -19,6 +23,9 @@ def pytest_addoption(parser):
 
 
 def parse_tensorclass(s):
+    """Take a string representing a tensorclass, such as "TensorZ2", and return
+    the corresponding class.
+    """
     s = s.lower().strip()
     if s == "tensor":
         return Tensor
@@ -34,6 +41,9 @@ def parse_tensorclass(s):
 
 
 def pytest_generate_tests(metafunc):
+    """Set up passing the read command line arguments to the tensorclass
+    fixture, and give its default value.
+    """
     default_opts = ["Tensor", "TensorZ2", "TensorU1", "TensorZ3"]
     tensorclass_opts = metafunc.config.getoption("tensorclass") or default_opts
     tensorclasses = map(parse_tensorclass, tensorclass_opts)
@@ -43,6 +53,9 @@ def pytest_generate_tests(metafunc):
 
 @pytest.fixture
 def n_qnums(tensorclass):
+    """Return the number of different possible quantum numbers for the given
+    tensorclass, or None if the answer is infinite or undefined.
+    """
     if tensorclass == TensorZ2:
         n_qnums = 2
     elif tensorclass == TensorZ3:
@@ -54,7 +67,15 @@ def n_qnums(tensorclass):
 
 @pytest.fixture
 def rshape(n_qnums):
+    """Return a function that generates random shapes for symmetric tensors."""
+
     def _rshape(n=None, chi=None, nlow=0, nhigh=5, chilow=0, chihigh=3):
+        """Return a random shape for a symmetric tensor.
+
+        `n` is the number of indices, `chi` is the bond dimension of each
+        symmetry sector. If either one is None, they are random generated using
+        the bounds `nlow`, `nhigh`, `chilow`, and `chihigh`.
+        """
         if n is None:
             n = np.random.randint(nlow, high=nhigh)
         shape = []
@@ -81,13 +102,24 @@ def rshape(n_qnums):
 
 @pytest.fixture
 def rqhape(n_qnums):
+    """Return a function that generates random `qhape`s for symmetric tensors.
+    """
+
     def _rqhape(shape, qlow=-3, qhigh=3):
+        """Return a random `qhape` for a symmetric tensor.
+
+        `shape` is the corresponding shape. When generating a `qhape` for
+        the `TensorZN` class, quantum numbers are randomly picked from
+        `range(0, n_qnums)`. For `TensorU1`, they are randomly picked from the
+        `range(qlow, qhigh+1)`.
+        """
         if n_qnums is not None:
             qlow = 0
             qhigh = n_qnums - 1
         try:
             assert all(len(dim) <= qhigh - qlow + 1 for dim in shape)
         except TypeError:
+            # This happens when dim is a single number.
             pass
         possible_qnums = range(qlow, qhigh + 1)
         try:
@@ -96,6 +128,7 @@ def rqhape(n_qnums):
                 for dim in shape
             ]
         except TypeError:
+            # This happens when dim is a single number.
             qhape = None
         return qhape
 
@@ -104,7 +137,15 @@ def rqhape(n_qnums):
 
 @pytest.fixture
 def rdirs():
+    """Return a function that generates random `dirs`s for symmetric tensors.
+    """
+
     def _rdirs(shape=None, length=None):
+        """Return a random `dirs` for a symmetric tensor.
+
+        `shape` is the corresponding shape. Alternatively, just the length of
+        of the `dirs` can be passed.
+        """
         if shape is not None:
             length = len(shape)
         dirs = np.random.randint(low=0, high=2, size=length)
@@ -116,14 +157,24 @@ def rdirs():
 
 @pytest.fixture
 def rcharge():
-    def _rcharge():
-        return np.random.randint(low=0, high=4)
+    """Return a function that generates random charges for symmetric tensors.
+    """
+
+    def _rcharge(low=0, high=4):
+        """Return a random charge for a symmetric tensor, i.e. a random integer
+        between `low` and `high`, inclusive.
+        """
+        return np.random.randint(low=low, high=high)
 
     return _rcharge
 
 
 @pytest.fixture
 def rtensor(tensorclass, n_qnums, rqhape, rshape, rdirs, rcharge):
+    """Return a function that generates a random tensor of the given
+    tensorclass, using the given fixtures for generating form data.
+    """
+
     def _rtensor(
         shape=None,
         qhape=None,
@@ -138,6 +189,22 @@ def rtensor(tensorclass, n_qnums, rqhape, rshape, rdirs, rcharge):
         cmplx=True,
         **kwargs
     ):
+        """Return a random tensor of the given form data.
+
+        Full form data (`shape`, `qhape`, `dirs`, `charge`) can be provided, in
+        which case only the elements of the tensor are random. Alternatively,
+        random form data can also be generated. In that case, `n` is the number
+        of indices (alternatively a random number between `nlow` and `nhigh`)
+        and `chi` is the bond dimension of all sectors (alternatively random
+        numbers between `chilow` and `chihigh`).
+
+        Partial form data can also be given. For instance, if one only gives
+        the `shape` argument, random `qhape`, `dirs`, and `charge` are
+        generated that match it.
+
+        `cmplx` sets whether the tensor should be complex instead of
+        real, and is by default True.
+        """
         if shape is None:
             shape = rshape(
                 n=n,

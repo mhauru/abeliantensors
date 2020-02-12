@@ -1,7 +1,11 @@
+"""The main test suite for abeliantensors."""
 import numpy as np
 from ncon import ncon
 from .ndarray_svd import svd, eig
 from abeliantensors import Tensor
+
+# # # # # # # # # # # # # # # # # # # #
+# Utilities that tests use
 
 # TODO This should not be a global constant. Figure out what to do about the
 # whole randomness thing. Maybe use this:
@@ -10,6 +14,10 @@ n_iters = 500
 
 
 def check_with_np(func, T, S, T_np, S_np):
+    """Given a function `func` that can take as arguments two `TensorCommon`
+    instances or two NumPy arrays, check that `func(T, S)` is the same as
+    `func(T_np, S_np)` converted to the type of `T` and `S`.
+    """
     tensor_res = func(S, T)
     np_res = func(S_np, T_np)
     np_res = type(tensor_res).from_ndarray(
@@ -23,8 +31,14 @@ def check_with_np(func, T, S, T_np, S_np):
 
 
 def check_internal_consistency(T):
+    """If `T` is a symmetric tensor, check that its form data is consistent.
+    """
     if not isinstance(T, (Tensor, np.generic, np.ndarray)):
         T.check_consistency()
+
+
+# # # # # # # # # # # # # # # # # # # #
+# The actual tests
 
 
 def test_to_and_from_ndarray(
@@ -39,7 +53,6 @@ def test_to_and_from_ndarray(
         check_internal_consistency(T)
         check_internal_consistency(S)
         assert (T == S).all()
-    print("Done testing to and from ndarray.")
 
 
 def test_arithmetic_and_comparison(
@@ -82,7 +95,6 @@ def test_arithmetic_and_comparison(
         assert check_with_np(lambda a, b: a * b, T, S, T_np, S_np)
         assert check_with_np(lambda a, b: a > b, T, S, T_np, S_np)
         assert check_with_np(lambda a, b: a == b, T, S, T_np, S_np)
-    print("Done testing arithmetic and comparison.")
 
 
 def test_transposing(
@@ -111,14 +123,13 @@ def test_transposing(
         T_tr_np = T.to_ndarray()
         T_np_tr = np.transpose(T_copy.to_ndarray(), perm)
         assert np.all(T_tr_np == T_np_tr)
-    print("Done testing transposing.")
 
 
 def test_splitting_and_joining(
     tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
-    # First join and then split two indices, compare with original.
     for iter_num in range(n_iters):
+        # First join and then split two indices, compare with original.
         T = rtensor(nlow=2)
         T_orig = T.copy()
         shp = T.shape
@@ -173,23 +184,6 @@ def test_splitting_and_joining(
             check_internal_consistency(T)
         assert (T_orig == T).all()
 
-    # TODO
-    # First split then join two indices, compare with original.
-    # for iter_num in range(n_iters):
-    #    shp = rshape(nlow=1)
-    #    i = np.random.randint(low=0, high=len(shp))
-    #    m_dim = rshape(n=1)[0]
-    #    n_dim = rshape(n=1)[0]
-    #    i_dim = tensorclass.combined_dim(m_dim, n_dim)
-    #    shp[i] = i_dim
-    #    T = rtensor(shape=shp)
-    #    T_orig = T.copy()
-    #    T = T.split_indices(i, (m_dim, n_dim))
-    #    check_internal_consistency(T)
-    #    T = T.join_indices(i,i+1)
-    #    check_internal_consistency(T)
-    #    assert((T_orig==T).all())
-
     # First join then split many indices, don't compare.
     for iter_num in range(n_iters):
         T = rtensor(nlow=1)
@@ -240,7 +234,6 @@ def test_splitting_and_joining(
             batch_new_indices, dim_batches, qims=qim_batches, dirs=dir_batches,
         )
         check_internal_consistency(T)
-    print("Done testing splitting and joining.")
 
 
 def test_to_and_from_matrix(
@@ -297,7 +290,6 @@ def test_to_and_from_matrix(
         T = T_tensor
         check_internal_consistency(T)
         assert (T == T_orig).all()
-    print("Done testing to and from matrix.")
 
 
 def test_diag(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
@@ -336,7 +328,6 @@ def test_diag(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
             invar=False,
         )
         assert T_np_diag.allclose(T_diag)
-    print("Done testing diag.")
 
 
 def test_trace(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
@@ -365,7 +356,6 @@ def test_trace(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
             charge=tr.charge,
         )
         assert np_tr_tensor.allclose(tr)
-    print("Done testing traces.")
 
 
 def test_multiply_diag(
@@ -398,7 +388,6 @@ def test_multiply_diag(
         T = TD
         check_internal_consistency(T)
         assert np.allclose(T.to_ndarray(), prod_np)
-    print("Done testing multiply_diag.")
 
 
 def test_product(
@@ -484,7 +473,6 @@ def test_product(
         check_internal_consistency(T)
         T_np = np.tensordot(T1_np, T2_np, (n1 - 1, 0))
         assert np.allclose(T_np, T.to_ndarray())
-    print("Done testing products.")
 
 
 def test_svd(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
@@ -571,7 +559,6 @@ def test_svd(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         )
         assert np.allclose(rel_err, np_rel_err, atol=1e-7)
         assert np.allclose(-np.sort(-S.to_ndarray()), S_np_svd)
-    print("Done testing SVD.")
 
 
 def test_eig(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
@@ -729,7 +716,6 @@ def test_eig(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
             )
         else:
             assert USV.allclose(T)
-    print("Done testing eig.")
 
 
 def test_split(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
@@ -765,12 +751,9 @@ def test_split(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
         assert US.allclose(split_res[0])
         assert S.allclose(split_res[1])
         assert SV.allclose(split_res[2])
-    print("Done testing splitting tensors.")
 
 
-def test_miscellaneous(
-    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
-):
+def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
     for iter_num in range(n_iters):
         # Test norm
         shp = rshape()
@@ -787,6 +770,9 @@ def test_miscellaneous(
         )
         assert np.allclose(T_norm, T_np_norm)
 
+
+def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+    for iter_num in range(n_iters):
         # Test min, max and average
         shp = rshape()
         for dim in shp:
@@ -798,6 +784,9 @@ def test_miscellaneous(
         T_np_max = np.max(T_np)
         assert T_max == T_np_max
 
+
+def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+    for iter_num in range(n_iters):
         shp = rshape()
         for dim in shp:
             if all([d == 0 for d in dim]):
@@ -808,6 +797,9 @@ def test_miscellaneous(
         T_np_min = np.min(T_np)
         assert T_min == T_np_min
 
+
+def test_norm(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+    for iter_num in range(n_iters):
         shp = rshape()
         for dim in shp:
             if all([d == 0 for d in dim]):
@@ -818,7 +810,11 @@ def test_miscellaneous(
         T_np_average = np.average(T_np)
         assert np.allclose(T_average, T_np_average)
 
-        # Test expand_dim
+
+def test_expand_dim(
+    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
+    for iter_num in range(n_iters):
         T = rtensor()
         T_orig = T.copy()
         axis = np.random.randint(0, high=len(T.shape) + 1)
@@ -834,7 +830,9 @@ def test_miscellaneous(
         check_internal_consistency(T_np_T)
         assert T.allclose(T_np_T)
 
-        # Test eye
+
+def test_eye(tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor):
+    for iter_num in range(n_iters):
         dim = rshape(n=1)[0]
         qim = rqhape(shape=[dim])[0]
         T = tensorclass.eye(dim, qim=qim)
@@ -844,7 +842,11 @@ def test_miscellaneous(
         )
         assert (T == T_np).all()
 
-        # Test flip_dir
+
+def test_flip_dir(
+    tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
+    for iter_num in range(n_iters):
         T = rtensor(nlow=1)
         T_orig = T.copy()
         i = np.random.randint(low=0, high=len(T.shape))
@@ -853,7 +855,6 @@ def test_miscellaneous(
         check_internal_consistency(T_flipped)
         T_flipped = T_flipped.flip_dir(i)
         assert (T == T_flipped).all()
-    print("Done testing miscellaneous.")
 
 
 def test_expand_dims_product(
@@ -878,7 +879,6 @@ def test_expand_dims_product(
         )
         check_internal_consistency(T_np_T)
         assert T.allclose(T_np_T)
-    print("Done testing expand_dims products.")
 
 
 def test_ncon_svd_ncon(
@@ -969,4 +969,3 @@ def test_ncon_svd_ncon(
             )
             norm_sq = S.norm_sq()
             assert np.allclose(norm_sq, norm_sq_ncon.value())
-    print("Done testing ncon_svd_ncon.")
