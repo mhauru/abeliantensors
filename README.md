@@ -168,9 +168,13 @@ eigenvalue decompositions of tensors.
 `AbelianTensor` for specific symmetry groups. If you need something other than
 Z2, Z3 and U(1), check this file to see how you could add what you need.
 
-`tests`: Plenty of tests for the various classes. The tests require the [ncon
-package](https://github.com/mhauru/ncon), which pip automatically installs for
-you. Most of the tests are based on generating a random instance of one of the
+## Tests
+
+The `tests` folder has plenty of tests for the various classes. They can be run
+by calling `pytest`, provided abeliantensors was installed with the extras option
+`tests`.
+
+Most of the tests are based on generating a random instance of one of the
 "fancy" tensor classes in this package, and confirming that the following
 diagram commutes:
 ```
@@ -182,6 +186,15 @@ Do the thing                             Do the thing
     │                                         │
     V                                         V
 Fancy tensor ─── map to numpy ndarray ───> ndarray
+```
+
+Two command line arguments can be provided, `--n_iters` which sets how many
+times each test is run, with different random tensors each time (100 by
+default), and `--tensorclass` which can be used to specify which
+tensorclass(es) the tests are run on (by default all of them). Here's an
+example of how one might run a specific test repeatedly:
+```
+pytest tests/test_tensors.py::test_to_and_from_ndarray --tensorclass TensorZ2 --n_iters 1000
 ```
 
 
