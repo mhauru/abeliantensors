@@ -1,7 +1,7 @@
 # Introduction
-[![Documentation Status][rtd-badge]][rtd-url]
-[![][travis-img]][travis-url]
-[![][codecov-img]][codecov-url]
+[![Readthedocs status badge][rtd-badge]][rtd-url]
+[![Travis status badge][travis-img]][travis-url]
+[![Codecov status badge][codecov-img]][codecov-url]
 
 abeliantensors is a Python 3 package that implements U(1) and Zn symmetry preserving
 tensors, as described by Singh et al. in
