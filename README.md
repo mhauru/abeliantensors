@@ -109,7 +109,36 @@ E, U = aadg.eig([0, 1], [2, 3], hermitian=True, eps=1e-5)
 ```
 
 There are many other user-facing methods and features, for more, see
-the [API docs](https://abeliantensors.readthedocs.io/en/latest/).
+the [API docs](https://abeliantensors.readthedocs.io/en/latest/API.html).
+
+## Demo and performance
+
+The folder `demo` has an implementation of Levin and Nave's [TRG
+algorithm](https://arxiv.org/abs/cond-mat/0611687), and a script
+that runs it on the square lattice Ising model, using both symmetric tensors
+of the TensorZ2 class and dense Tensors, and compares the run times.
+Below is a plot of how long it takes to run a single TRG step at various
+bond dimensions for both of them.
+
+![Running time of a single TRG step as a function of bond dimension, compared
+between using and not using symmetric tensors](demo/trg_performance.svg)
+
+Note that both axes are logarithmic.
+
+At low bond dimensions the simple `Tensor` class outperforms `TensorZ2`, because
+keeping track of the symmetry structure imposes an overhead. The time
+complexity of the overhead is subleading as a function of bond dimension, and
+as one goes to higher bond dimensions the symmetric tensors become faster.
+Asymptotically both have the same scaling as a function of bond dimension, but
+the prefactor is smaller for `TensorZ2` by a factor of 1/4. This is because
+instead of multiplying or decomposing an `m` x `m` matrix at cost `m**3`, we
+are multiplying two `m/2` by `m/2` matrices, at a total cost of `2*(m/2)**3 =
+(m**3)/4`.  For larger symmetry groups, the asymptotic benefit would be
+greater. For instance for `TensorZ3`, we should see an approximately 9-fold
+speed-up.
+
+Similar results can be obtained for other algorithms, although the cross-over
+point in bond dimension will be different.
 
 ## Design and structure
 
