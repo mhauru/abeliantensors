@@ -6,10 +6,10 @@ from collections.abc import Iterable
 
 
 class TensorCommon:
-    """A base class for Tensor and AbelianTensor, that implements some higher
-    level functions that are common to the two.
+    """A base class for `Tensor` and `AbelianTensor`, that implements some
+    higher level functions that are common to the two.
 
-    Useful also for type checking as in `isinstance(T, TensorCommon)`.
+    Useful also for type checking as in ``isinstance(T, TensorCommon)``.
     """
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -17,17 +17,17 @@ class TensorCommon:
 
     @classmethod
     def empty(cls, *args, **kwargs):
-        """Initialize a tensor of given form with np.empty."""
+        """Initialize a tensor of given form with `np.empty`."""
         return cls.initialize_with(np.empty, *args, **kwargs)
 
     @classmethod
     def zeros(cls, *args, **kwargs):
-        """Initialize a tensor of given form with np.zeros."""
+        """Initialize a tensor of given form with `np.zeros`."""
         return cls.initialize_with(np.zeros, *args, **kwargs)
 
     @classmethod
     def ones(cls, *args, **kwargs):
-        """Initialize a tensor of given form with np.ones."""
+        """Initialize a tensor of given form with `np.ones`."""
         return cls.initialize_with(np.ones, *args, **kwargs)
 
     @classmethod
@@ -39,8 +39,8 @@ class TensorCommon:
     # Miscellaneous
 
     def form_str(self):
-        """Return a string that describes the form of the tensor: the shape,
-        qhape and dirs.
+        """Return a string that describes the form of the tensor: the `shape`,
+        `qhape` and `dirs`.
         """
         s = "shape: %s\nqhape: %s\ndirs: %s" % (
             str(self.shape),
@@ -51,7 +51,7 @@ class TensorCommon:
 
     @staticmethod
     def flatten_shape(shape):
-        """Given a shape that may have dimensions divided between sectors,
+        """Given a `shape` that may have dimensions divided between sectors,
         return a flattened shape, that has just the total dimension of each
         index.
         """
@@ -62,8 +62,9 @@ class TensorCommon:
 
     @staticmethod
     def flatten_dim(dim):
-        """Given a dim for a single leg that may be divided between sectors,
-        return a flattened dim, that has just the total dimension of the index.
+        """Given a `dim` for a single index that may be divided between
+        sectors, return a flattened dim, that has just the total dimension of
+        the index.
         """
         try:
             return sum(dim)
@@ -84,11 +85,12 @@ class TensorCommon:
     @classmethod
     def default_trunc_err_func(cls, S, chi, norm_sq=None):
         """The default error function used when truncating decompositions:
-        L_2 norm of the discarded singular or eigenvalues S[chi:], divided by
-        the L_2 norm of the whole spectrum S.
+        L_2 norm of the discarded singular or eigenvalues ``S[chi:]``, divided
+        by the L_2 norm of the whole spectrum `S`.
 
-        A keyword argument norm_sq gives the option of specifying the Frobneius
-        norm manually, if for instance S isn't the full spectrum to start with.
+        A keyword argument `norm_sq` gives the option of specifying the
+        Frobneius norm manually, if for instance `S` isn't the full spectrum to
+        start with.
         """
         if norm_sq is None:
             norm_sq = sum(S ** 2)
@@ -108,18 +110,19 @@ class TensorCommon:
     ):
         """Reshape the tensor into a matrix.
 
-        The reshape is done by transposing left_inds to one side of self and
-        right_inds to the other, and joining these indices so that the result
-        is a matrix. On both sides, before reshaping, the indices are also
-        transposed to the order given in left/right_inds. If one or both of
-        left/right_inds is not provided the result is a vector or a scalar.
+        The reshape is done by transposing `left_inds` to one side of `self`
+        and `right_inds` to the other, and joining these indices so that the
+        result is a matrix. On both sides, before reshaping, the indices are
+        also transposed to the order given in `left`/`right_inds`. If one or
+        both of `left`/right_inds is not provided the result is a vector or a
+        scalar.
 
-        dirs are the directions of the new indices. By default it is [1,-1] for
-        matrices and [1] (respectively [-1]) if only left_inds (respectively
-        right_inds) is provided.
+        `dirs` are the directions of the new indices. By default it is `[1,-1]`
+        for matrices and `[1]` (respectively `[-1]`) if only `left_inds`
+        (respectively `right_inds`) is provided.
 
-        If return_transposed_shape_data is True then the shape, qhape and dirs
-        of the tensor after all the transposing but before reshaping is
+        If `return_transposed_shape_data` is True then the `shape`, `qhape` and
+        `dirs` of the tensor after all the transposing but before reshaping is
         returned as well.
         """
         if dirs is None:
@@ -181,12 +184,12 @@ class TensorCommon:
         """Reshape a matrix back into a tensor, given the form data for the
         tensor.
 
-        The counter part of to_matrix, from_matrix takes in a matrix and
-        the dims, qims and dirs lists of the left and right indices that the
-        resulting tensor should have. Mainly meant to be used so that one first
-        calls to_matrix, takes note of the transposed_shape_data and uses that
-        to reshape the matrix back to a tensor once one is done operating on
-        the matrix.
+        The counter part of `to_matrix`, `from_matrix` takes in a matrix and
+        the `dims`, `qims` and `dirs` lists of the left and right indices that
+        the resulting tensor should have. Mainly meant to be used so that one
+        first calls `to_matrix`, takes note of the `transposed_shape_data` and
+        uses that to reshape the matrix back to a tensor once one is done
+        operating on the matrix.
         """
         indices = tuple(range(len(self.shape)))
         final_dims = ()
@@ -212,7 +215,7 @@ class TensorCommon:
     def dot(self, other, indices):
         """Dot product of tensors.
 
-        See numpy.tensordot on how to use this, the interface is exactly the
+        See `numpy.tensordot` on how to use this, the interface is exactly the
         same, except that this one is a method, not a function. The original
         tensors are not modified.
         """
@@ -294,11 +297,11 @@ class TensorCommon:
     def eig(self, a, b, *args, return_rel_err=False, **kwargs):
         """Eigenvalue decompose the tensor.
 
-        Transpose indices a to be on one side of self, b on the other, and
-        reshape self to a matrix. Then find the eigenvalues and eigenvectors of
-        this matrix, and reshape the eigenvectors to have on the left side the
-        indices that self had on its right side after transposing but before
-        reshaping.
+        Transpose indices `a` to be on one side of `self`, `b` on the other,
+        and reshape `self` to a matrix. Then find the eigenvalues and
+        eigenvectors of this matrix, and reshape the eigenvectors to have on
+        the left side the indices that `self` had on its right side after
+        transposing but before reshaping.
 
         If the keyword argument `hermitian` is True then the matrix that is
         formed after the reshape is assumed to be hermitian.
@@ -306,23 +309,24 @@ class TensorCommon:
         Truncation works like with SVD.
 
         If the keyword argument `sparse` is True, a sparse eigenvalue
-        decomposition, using power methods from scipy.sparse.eigs or eigsh, is
-        used. This decomposition is done to find max(chis) eigenvalues, after
-        which the decomposition may be truncated further if the truncation
-        error so allows. Thus max(chis) should be much smaller than the full
-        size of the matrix, if sparse is True.
+        decomposition, using power methods from `scipy.sparse.eigs` or `eigsh`,
+        is used. This decomposition is done to find ``max(chis)`` eigenvalues,
+        after which the decomposition may be truncated further if the
+        truncation error so allows. Thus ``max(chis)`` should be much smaller
+        than the full size of the matrix, if `sparse` is True.
 
-        Output is S, U, [rel_err], where S is a vector of eigenvalues and U is
-        a tensor such that the last index enumerates the eigenvectors of self
-        in the sense that if u_i = U[...,i] then
-        self.dot(u_i, (b, all_indices_of_u_i)) == S[i] * u_i.
-        rel_err is relative error in truncation, only returned if
-        return_rel_err is True.
+        Output is ``S, U, [rel_err]``, where `S` is a vector of eigenvalues and
+        `U` is a tensor such that the last index enumerates the eigenvectors of
+        `self` in the sense that if ``u_i = U[...,i]`` then
+        ``self.dot(u_i, (b, all_indices_of_u_i)) == S[i] * u_i``.
+        `rel_err` is relative error in truncation, only returned if
+        `return_rel_err` is True.
 
-        The above syntax is precisely correct only for Tensors. For
-        AbelianTensors the idea is the same, but eigenvalues and vectors come
+        The above syntax is precisely correct only for `Tensors`. For
+        `AbelianTensors` the idea is the same, but eigenvalues and vectors come
         with quantum numbers so the syntax is slightly different. See
-        AbelianTensor.matrix_eig for more details about what precisely happens.
+        `AbelianTensor.matrix_eig` for more details about what precisely
+        happens.
 
         The original tensor is not modified by this method.
         """
@@ -366,46 +370,46 @@ class TensorCommon:
     def svd(self, a, b, *args, return_rel_err=False, **kwargs):
         """Singular value decompose a tensor.
 
-        Transpose indices a to be on one side of self, b on the other, and
-        reshape self to a matrix. Then singular value decompose this matrix
-        into U, S, V. Finally reshape the unitary matrices to tensors that have
-        a new index coming from the SVD, for U as the last index and for V as
-        the first, and U to have indices a as its first indices and V to have
-        indices b as its last indices.
+        Transpose indices `a` to be on one side of `self`, `b` on the other,
+        and reshape `self` to a matrix. Then singular value decompose this
+        matrix into ``U, S, V``. Finally reshape the unitary matrices to
+        tensors that have a new index coming from the SVD, for `U` as the last
+        index and for `V` as the first, and `U` to have indices a as its first
+        indices and `V` to have indices `b` as its last indices.
 
-        The optional argument chis is a list of bond dimensions. The SVD is
-        truncated to one of these dimensions chi, meaning that only chi largest
-        singular values are kept. If chis is a single integer (either within a
-        singleton list or just as a bare integer) this dimension is used. If
-        eps==0, the largest value in chis is used. Otherwise the smallest chi
-        in chis is used, such that the relative error made in the truncation is
-        smaller than eps. The truncation error is by default the Frobenius norm
-        of the difference, but can be specified with the keyword agument
-        trunc_err_func.
+        The optional argument `chis` is a list of bond dimensions. The SVD is
+        truncated to one of these dimensions `chi`, meaning that only `chi`
+        largest singular values are kept. If `chis` is a single integer (either
+        within a singleton list or just as a bare integer) this dimension is
+        used. If ``eps == 0``, the largest value in `chis` is used. Otherwise
+        the smallest `chi` in `chis` is used, such that the relative error made
+        in the truncation is smaller than `eps`. The truncation error is by
+        default the Frobenius norm of the difference, but can be specified with
+        the keyword agument `trunc_err_func`.
 
         An exception to the above is made by degenerate singular values. By
         default truncation is never done so that some singular values are
         included while others of the same value are left out. If this is about
-        to happen, chi is decreased so that none of the degenerate singular
+        to happen, `chi` is decreased so that none of the degenerate singular
         values are included. This default behavior can be changed with the
-        keyword argument break_degenerate=True. The default threshold for when
+        keyword argument `break_degenerate`. The default threshold for when
         singular values are considered degenerate is 1e-6. This can be changed
-        with the keyword argument degeneracy_eps.
+        with the keyword argument `degeneracy_eps`.
 
         If the keyword argument `sparse` is True, a sparse singular value
-        decomposition, using power methods from scipy.sparse.svds, is used.
-        This decomposition is done to find max(chis) singular values, after
+        decomposition, using power methods from `scipy.sparse.svds`, is used.
+        This decomposition is done to find ``max(chis)`` singular values, after
         which the decomposition may be truncated further if the truncation
-        error so allows. Thus max(chis) should be much smaller than the full
-        size of the matrix, if sparse is True.
+        error so allows. Thus ``max(chis)`` should be much smaller than the
+        full size of the matrix, if `sparse` is True.
 
-        If return_rel_err is True then the relative truncation error is also
+        If `return_rel_err` is True then the relative truncation error is also
         returned.
 
-        Output is U, S, V, and possibly rel_err. Here S is a vector of
-        singular values and U and V are isometric tensors (unitary if the
+        The return value is ``U, S, V, [rel_err]``. Here `S` is a vector of
+        singular values and `U` and `V` are isometric tensors (unitary if the
         matrix that is SVDed is square and there is no truncation).
-        U . S.diag() . V == self, up to truncation errors.
+        ``U . S.diag() . V == self``, up to truncation errors.
 
         The original tensor is not modified by this method.
         """
@@ -508,14 +512,15 @@ class TensorCommon:
         This is like an SVD, but takes the square root of the singular values
         and multiplies both unitaries with it, so that the tensor is split into
         two parts. Values are returned as
-        (US, [S], SV, [rel_err]),
+        ``US, [S], SV, [rel_err]``,
         where the ones in square brackets are only returned if the
-        corresponding arguments, return_rel_err and return_sings, are True.
+        corresponding arguments, `return_rel_err` and `return_sings`, are True.
 
-        The distribution of sqrt(S) onto the two sides can be changed with the
-        keyword argument weight. If weight="left" (correspondingly "right")
-        then S is multiplied into U (correspondingly V). By default
-        weight="both", in which the square root is evenly distributed.
+        The distribution of ``sqrt(S)`` onto the two sides can be changed with
+        the keyword argument `weight`. If ``weight="left"`` (correspondingly
+        ``"right"``) then `S` is multiplied into `U` (correspondingly `V`). By
+        default ``weight="both"``, in which the square root is evenly
+        distributed.
         """
         svd_result = self.svd(
             a, b, *args, return_rel_err=return_rel_err, **kwargs

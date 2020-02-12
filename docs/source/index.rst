@@ -16,6 +16,11 @@ This page contains the API reference of the package.
 Symmetric tensor classes
 -------------------------------------
 
+.. autoclass:: abeliantensors.symmetrytensors.TensorU1
+   :members:
+   :no-undoc-members:
+   :show-inheritance:
+
 .. autoclass:: abeliantensors.symmetrytensors.TensorZ2
    :members:
    :no-undoc-members:
@@ -26,10 +31,11 @@ Symmetric tensor classes
    :no-undoc-members:
    :show-inheritance:
 
-.. autoclass:: abeliantensors.symmetrytensors.TensorU1
+.. autoclass:: abeliantensors.symmetrytensors.TensorZN
    :members:
    :no-undoc-members:
    :show-inheritance:
+
 
 AbelianTensor
 -------------------------------------

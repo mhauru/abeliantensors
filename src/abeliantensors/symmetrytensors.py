@@ -6,8 +6,8 @@ from collections.abc import Iterable
 class TensorZN(AbelianTensor):
     """A symmetric tensor class for the cyclic group of order N.
 
-    See AbelianTensor for the details: A TensorZN is just an AbelianTensor
-    for which addition of charges is done modulo N.
+    See `AbelianTensor` for the details: A `TensorZN` is just an
+    `AbelianTensor` for which addition of charges is done modulo N.
     """
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -26,7 +26,7 @@ class TensorZN(AbelianTensor):
 
     @classmethod
     def eye(cls, dim, qim=None, qodulus=None, dtype=np.float_):
-        """Return the identity matrix of the given dimension dim."""
+        """Return the identity matrix of the given dimension `dim`."""
         if qim is None:
             qim = cls._dim_to_qim(dim)
         qodulus = cls.qodulus
@@ -38,7 +38,9 @@ class TensorZN(AbelianTensor):
     def initialize_with(
         cls, numpy_func, shape, *args, qhape=None, qodulus=None, **kwargs
     ):
-        """Return a tensor of the given shape, initialized with numpy_func."""
+        """Return a tensor of the given `shape`, initialized with
+        `numpy_func`.
+        """
         if qhape is None:
             qhape = cls._shape_to_qhape(shape)
         qodulus = cls.qodulus
@@ -53,12 +55,12 @@ class TensorZN(AbelianTensor):
     def from_ndarray(
         cls, a, *args, shape=None, qhape=None, qodulus=None, **kwargs
     ):
-        """Build an TensorZN out of a given numpy ndarray, using the
-        provided form data.
+        """Build a `TensorZN` out of a given NumPy array, using the provided
+        form data.
 
         If `qhape` is not provided, it is automatically generated based on
-        `shape` to be [0, ..., N] for each index. See
-        AbelianTensor.from_ndarray for more documentation.
+        `shape` to be ``[0, ..., N]`` for each index. See
+        `AbelianTensor.from_ndarray` for more documentation.
         """
         if qhape is None:
             qhape = cls._shape_to_qhape(shape)
@@ -79,7 +81,7 @@ class TensorZN(AbelianTensor):
 
     @classmethod
     def _shape_to_qhape(cls, shape):
-        """Given the shape of a tensor, generate the the corresponding default
+        """Given the `shape` of a tensor, generate the the corresponding default
         quantum numbers.
         """
         return [cls._dim_to_qim(dim) for dim in shape]
@@ -91,8 +93,8 @@ class TensorZN(AbelianTensor):
         """Split indices in the spirit of reshape.
 
         If `qhape` is not provided, it is automatically generated based on
-        `shape` to be [0, ..., N] for each index. See AbelianTensor.split for
-        more documentation.
+        `shape` to be ``[0, ..., N]`` for each index. See `AbelianTensor.split`
+        for more documentation.
         """
         # Buildind qims.
         if qims is None:
@@ -108,7 +110,7 @@ class TensorZN(AbelianTensor):
 class TensorZ2(TensorZN):
     """A class for Z2 symmetric tensors.
 
-    See the parent class AbelianTensor for details.
+    See the parent class `AbelianTensor` for details.
     """
 
     qodulus = 2
@@ -117,7 +119,7 @@ class TensorZ2(TensorZN):
 class TensorZ3(TensorZN):
     """A class for Z3 symmetric tensors.
 
-    See the parent class AbelianTensor for details.
+    See the parent class `AbelianTensor` for details.
     """
 
     qodulus = 3
@@ -126,7 +128,7 @@ class TensorZ3(TensorZN):
 class TensorU1(AbelianTensor):
     """A class for U(1) symmetric tensors.
 
-    See the parent class AbelianTensor for details.
+    See the parent class `AbelianTensor` for details.
     """
 
     qodulus = None

@@ -2,22 +2,24 @@ import numpy as np
 import operator as opr
 import functools as fct
 import scipy.sparse.linalg as spsla
+import warnings
 from .tensorcommon import TensorCommon
 from collections.abc import Iterable
 
 
 class Tensor(TensorCommon, np.ndarray):
-    """A wrapper class for NumPy ndarrays.
+    """A wrapper class for NumPy arrays.
 
-    This class implements no new functionality beyond ndarrays, but simply
-    provides ndarrays the same interface that is used by the symmetry
-    preserving tensor classes. Tensors always have qhape == None, dirs == None
-    and charge == 0.
+    This class implements no new functionality beyond NumPy arrays, but simply
+    provides them with the same interface that is used by the symmetry
+    preserving tensor classes. `Tensors` always have ``qhape == None``, ``dirs
+    == None`` and ``charge == 0``.
 
-    Note that Tensor is a subclass of both TensorCommon and numpy.ndarray, so
-    many numpy functions work directly on Tensors. It's preferable to use
-    methods of the Tensor class instead though, because it allows to easily
-    switching to a symmetric tensor class without modifying the code.
+    Note that `Tensor` is a subclass of both `TensorCommon` and
+    `numpy.ndarray`, so many NumPy functions work directly on `Tensors`. It's
+    preferable to use methods of the `Tensor` class instead though, because it
+    allows to easily switching to a symmetric tensor class without modifying
+    the code.
     """
 
     # Practically all methods of Tensor take keyword argument like qhape, dirs,
@@ -79,12 +81,12 @@ class Tensor(TensorCommon, np.ndarray):
     # To and from numpy arrays
 
     def to_ndarray(self, **kwargs):
-        """Return the corresponding ndarray, as a copy."""
+        """Return the corresponding NumPy array, as a copy."""
         return np.asarray(self.copy())
 
     @classmethod
     def from_ndarray(cls, a, **kwargs):
-        """Given an ndarray, return the corresponding Tensor instance."""
+        """Given an NumPy array, return the corresponding `Tensor` instance."""
         if isinstance(a, np.ndarray):
             res = a.copy().view(cls)
         else:
@@ -112,21 +114,21 @@ class Tensor(TensorCommon, np.ndarray):
     def any(self, *args, **kwargs):
         """Return whether any elements are True.
 
-        See numpy.ndarray.any for details.
+        See `numpy.ndarray.any` for details.
         """
         return np.ndarray.any(self, *args, **kwargs)
 
     def all(self, *args, **kwargs):
         """Return whether all elements are True.
 
-        See numpy.ndarray.all for details.
+        See `numpy.ndarray.all` for details.
         """
         return np.ndarray.all(self, *args, **kwargs)
 
     def allclose(self, other, *args, **kwargs):
         """Return whether self and other are nearly element-wise equal.
 
-        See numpy.allclose for details.
+        See `numpy.allclose` for details.
         """
         return np.allclose(self, other, *args, **kwargs)
 
@@ -166,33 +168,35 @@ class Tensor(TensorCommon, np.ndarray):
     # Miscellaneous
 
     def isscalar(self):
-        """Return whether the Tensor is a scalar."""
+        """Return whether this `Tensor` is a scalar."""
         return not bool(self.shape)
 
     def compatible_indices(self, other, i, j):
-        """Return True if index i of self and index j of other are of the same
-        dimension.
+        """Return True if index `i` of `self` and index `j` of `other` are of
+        the same dimension.
         """
         return self.shape[i] == other.shape[j]
 
     def flip_dir(self, axis):
         """A no-op, that returns a view.
 
-        The corresponding method of AbelianTensor flips the direction of an
-        index, but directions are meaningless for Tensors.
+        The corresponding method of `AbelianTensor` flips the direction of an
+        index, but directions are meaningless for `Tensors`.
         """
         res = self.view()
         return res
 
     def expand_dims(self, axis, direction=1):
-        """Add to self a new singleton index, at position `axis`."""
+        """Add to `self` a new singleton index, at position `axis`."""
         res = np.expand_dims(self, axis)
         if not isinstance(res, Tensor):
             res = type(self).from_ndarray(res)
         return res
 
     def value(self):
-        """For a scalar tensor, return the scalar."""
+        """For a scalar tensor, return the scalar. For a non-scalar one, raise
+        a `ValueError`.
+        """
         if not self.isscalar():
             raise ValueError("value called on a non-scalar tensor.")
         else:
@@ -283,19 +287,19 @@ class Tensor(TensorCommon, np.ndarray):
     ):
         """Join indices together in the spirit of reshape.
 
-        inds is either a iterable of indices, in which case they are joined, or
-        a iterable of iterables of indices, in which case the indices listed in
-        each element of inds will be joined.
+        `inds` is either a iterable of indices, in which case they are joined,
+        or a iterable of iterables of indices, in which case the indices listed
+        in each element of `inds` will be joined.
 
         Before any joining is done the indices are transposed so that for every
         batch of indices to be joined the first remains in place and the others
         are moved to be after in the order given. The order in which the
         batches are given does not matter.
 
-        If return_transposed_shape_data is True, then the shape of the tensor
+        If `return_transposed_shape_data` is True, then the shape of the tensor
         after transposing but before reshaping is returned as well, in addition
-        to None and None, that take the place of transposed_qhape and
-        transposed_dirs of AbelianTensor.
+        to None and None, that take the place of `transposed_qhape` and
+        `transposed_dirs` of `AbelianTensor`.
 
         The method does not modify the original tensor.
         """
@@ -350,22 +354,23 @@ class Tensor(TensorCommon, np.ndarray):
     def split_indices(self, indices, dims, qims=None, **kwargs):
         """Splits indices in the spirit of reshape.
 
-        Indices is an iterable of indices to be split. Dims is an iterable of
-        iterables such that dims[i]=dim_batch is an iterable of lists of
+        `indices` is an iterable of indices to be split. `dims` is an iterable
+        of iterables such that ``dims[i]`` is an iterable of lists of
         dimensions, each list giving the dimensions along a new index that will
-        come out of splitting indices[i].
+        come out of splitting ``indices[i]``.
 
         An example clarifies:
-        Suppose self has shape [dim1, dim2, dim3, dim4]. Suppose then that
-        indices = [1,3], dims = [[dimA, dimB], [dimC, dimD]].  Then the
-        resulting tensor will have shape [dim1, dimA, dimB, dim3, dimC, dimD],
-        assuming that that dims and are such that joining dimA and dimB gives
-        dim2, etc.
+        Suppose `self` has `shape` ``[dim1, dim2, dim3, dim4]``. Suppose then
+        that ``indices = [1,3]``, ``dims = [[dimA, dimB], [dimC, dimD]]``.
+        Then the resulting tensor will have ``shape = [dim1, dimA, dimB, dim3,
+        dimC, dimD]``, assuming that that `dims` and are such that joining
+        `dimA` and `dimB` gives `dim2`, etc.
 
         Instead of a list of indices a single index may be given.
-        Correspondingly dims should then have one level of depth less as well.
+        Correspondingly `dims` should then have one level of depth less as
+        well.
 
-        split_indices never modifies the original tensor.
+        `split_indices` never modifies the original tensor.
         """
         # Format the input so that indices is a list and dim_batches is a list
         # of lists.
@@ -401,8 +406,8 @@ class Tensor(TensorCommon, np.ndarray):
     def multiply_diag(self, diag_vect, axis, *args, **kwargs):
         """Multiply by a diagonal matrix on one axis.
 
-        The result of multiply_diag is the same as
-        `self.dot(diag_vect.diag(), (axis, 0))`
+        The result of `multiply_diag` is the same as
+        ``self.dot(diag_vect.diag(), (axis, 0))``
         This operation is just done without constructing the full diagonal
         matrix.
         """
@@ -418,7 +423,7 @@ class Tensor(TensorCommon, np.ndarray):
         return res
 
     def trace(self, axis1=0, axis2=1):
-        """Return the trace over indices axis1 and axis2."""
+        """Return the trace over indices `axis1` and `axis2`."""
         # We assert that the tensor is square with respect to axis1 and axis2,
         # to follow as closely as possible what AbelianTensor does.
         assert self.compatible_indices(self, axis1, axis2)
@@ -428,7 +433,7 @@ class Tensor(TensorCommon, np.ndarray):
     def dot(self, B, indices):
         """Dot product of tensors.
 
-        See numpy.tensordot on how to use this, the interface is exactly the
+        See `numpy.tensordot` on how to use this, the interface is exactly the
         same, except that this one is a method, not a function. The original
         tensors are not modified.
         """
@@ -463,19 +468,20 @@ class Tensor(TensorCommon, np.ndarray):
 
         The input must be a square matrix.
 
-        If hermitian is True the matrix is assumed to be hermitian.
+        If `hermitian` is True the matrix is assumed to be hermitian.
 
         Truncation works like for SVD, see the documentation there for more.
 
-        If sparse is True, a sparse eigenvalue decomposition, using power
-        methods from scipy.sparse.eigs or eigsh, is used. This decomposition is
-        done to find max(chis) eigenvalues, after which the decomposition may
-        be truncated further if the truncation error so allows. Thus max(chis)
-        should be much smaller than the full size of the matrix, if sparse is
-        True.
+        If `sparse` is True, a sparse eigenvalue decomposition, using power
+        methods from `scipy.sparse.eigs` or `eigsh`, is used. This
+        decomposition is done to find ``max(chis)`` eigenvalues, after which
+        the decomposition may be truncated further if the truncation error so
+        allows. Thus ``max(chis)`` should be much smaller than the full size of
+        the matrix, if `sparse` is True.
 
-        The output is in the form S, U, where S is a vector of eigenvalues and
-        U is a matrix that has as its columns the eigenvectors.
+        The return values is ``S, U, rel_err``, where `S` is a vector of
+        eigenvalues and `U` is a matrix that has as its columns the
+        eigenvectors. `rel_err` is the truncation error.
         """
         if print_errors != "deprecated":
             msg = (
@@ -533,35 +539,35 @@ class Tensor(TensorCommon, np.ndarray):
     ):
         """Singular value decompose a matrix.
 
-        The optional argument chis is a list of bond dimensions. The SVD is
-        truncated to one of these dimensions chi, meaning that only chi largest
-        singular values are kept. If chis is a single integer (either within a
-        singleton list or just as a bare integer) this dimension is used. If
-        eps==0, the largest value in chis is used. Otherwise the smallest chi
-        in chis is used, such that the relative error made in the truncation is
-        smaller than eps. The truncation error is by default the Frobenius norm
-        of the difference, but can be specified with the keyword agument
-        trunc_err_func.
+        The optional argument `chis` is a list of bond dimensions. The SVD is
+        truncated to one of these dimensions `chi`, meaning that only `chi`
+        largest singular values are kept. If `chis` is a single integer (either
+        within a singleton list or just as a bare integer) this dimension is
+        used. If ``eps == 0``, the largest value in `chis` is used. Otherwise
+        the smallest `chi` in `chis` is used, such that the relative error made
+        in the truncation is smaller than `eps`. The truncation error is by
+        default the Frobenius norm of the difference, but can be specified with
+        the keyword agument `trunc_err_func`.
 
         An exception to the above is made by degenerate singular values. By
         default truncation is never done so that some singular values are
         included while others of the same value are left out. If this is about
-        to happen, chi is decreased so that none of the degenerate singular
+        to happen, `chi` is decreased so that none of the degenerate singular
         values are included. This default behavior can be changed with the
-        keyword argument break_degenerate=True. The default threshold for when
+        keyword argument `break_degenerate`. The default threshold for when
         singular values are considered degenerate is 1e-6. This can be changed
-        with the keyword argument degeneracy_eps.
+        with the keyword argument `degeneracy_eps`.
 
-        If sparse is True, a sparse SVD, using power methods from
-        scipy.sparse.svds, is used. This SVD is done to find max(chis) singular
-        values, after which the decomposition may be truncated further if the
-        truncation error so allows. Thus max(chis) should be much smaller than
-        the full size of the matrix, if sparse is True.
+        If `sparse` is True, a sparse SVD, using power methods from
+        `scipy.sparse.svds`, is used. This SVD is done to find ``max(chis)``
+        singular values, after which the decomposition may be truncated further
+        if the truncation error so allows. Thus ``max(chis)`` should be much
+        smaller than the full size of the matrix, if `sparse` is True.
 
-        The method returns the tuple U, S, V, rel_err, where S is a vector and
-        U and V are unitary matrices. They are such that U.diag(S).V == self,
-        where the equality is appromixate if there is truncation. rel_err is
-        the truncation error.
+        The return value is``U, S, V, rel_err``, where `S` is a vector and `U`
+        and `V` are unitary matrices. They are such that ``U.diag(S).V ==
+        self``, where the equality is appromixate if there is truncation.
+        `rel_err` is the truncation error.
         """
         if print_errors != "deprecated":
             msg = (

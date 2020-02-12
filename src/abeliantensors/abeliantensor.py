@@ -56,60 +56,62 @@ class AbelianTensor(TensorCommon):
     symmetry groups.
 
     This class is meant to be subclassed to implement specific symmetries,
-    which can typically be done by simply fixing the qodulus of the class (see
-    below).
+    which can typically be done by simply fixing the `qodulus` of the class
+    (see below).
 
-    Every AbelianTensor has the following attributes:
+    Every `AbelianTensor` has the following attributes:
 
-    shape: A list of dims, one dim per leg. Every dim is a list of integerers
-    that are the dimensions of the different quantum number blocks along that
-    leg.
+    `shape`: A list of `dims`, one `dim` per index. Every `dim` is a list of
+    integerers that are the dimensions of the different quantum number blocks
+    along that indices.
 
-    qhape: A list of qims, one qim per leg. Every qim is a list of unique
-    integers that are the quantum numbers (qnums), aka charges, of that leg.
-    The quantum numbers are in one-to-one correspondence with the elements of
-    the dims, so that qhape[i][j] and shape[i][j] are the qnum and dimension of
-    the same block.
+    `qhape`: A list of `qims`, one `qim` per index. Every `qim` is a list of
+    unique integers that are the quantum numbers (`qnums`), aka charges, of
+    that index. The quantum numbers are in one-to-one correspondence with the
+    elements of the `dims`, so that ``qhape[i][j]`` and ``shape[i][j]`` are the
+    `qnum` and dimension of the same block.
 
-    dirs: A list of integers -1 or 1, one for each leg. 1 means that the
-    corresponding leg is outgoing, -1 means incoming.
+    `dirs`: A list of integers -1 or 1, one for each index. 1 means that the
+    corresponding index is outgoing, -1 means incoming.
 
-    qodulus: An integer or None. If an integer, then all arithmetic on the
-    quantum numbers is done modulo qodulus. If None then arithmetic on qnums is
-    just usual integer arithmetic.
+    `qodulus`: An integer or None. If an integer, then all arithmetic on the
+    quantum numbers is done modulo `qodulus`. If None then arithmetic on
+    `qnums` is just usual integer arithmetic.
 
-    sects: A dict of numpy arrays, with combinations of quantum numbers as
-    keys. Every key must a tuple of quantum numbers, one for each leg, and each
-    one of them being from the qim of that leg. The value of the dict at this
-    key is the block (or "sector" or "sect") corresponding to these quantum
-    numbers. If the tensor is invariant under a symmetry (see invar) then only
-    certain blocks are allowed to be set, but even in such a cause not all
-    allowed blocks must be set.  For the treatement of unset blocks see defval.
+    `sects`: A dict of numpy arrays, with combinations of quantum numbers as
+    keys. Every key must a tuple of quantum numbers, one for each index, and
+    each one of them being from the `qim` of that index. The value of the dict
+    at this key is the block (or "sector" or "sect") corresponding to these
+    quantum numbers. If the tensor is invariant under a symmetry (see `invar`)
+    then only certain blocks are allowed to be set, but even in such a cause
+    not all allowed blocks must be set. For the treatement of unset blocks see
+    `defval`.
 
-    dtype: A numpy dtype, that is the dtype of all the sects.
+    `dtype`: A NumPy dtype, that is the dtype of all the sects.
 
-    defval: The default value that the tensor has everywhere outside the blocks
-    set in sects. If the tensor is a scalar with no legs then its value is its
-    defval and it has no blocks. Note that many of the methods - such as dot
-    and svd - require defval == 0 (and assert this). The main use of defval !=
-    0 is to be able to handle tensors of boolean values that arise in
-    comparisons.
+    `defval`: The default value that the tensor has everywhere outside the
+    blocks set in `sects`. If the tensor is a scalar with no indices then its
+    value is its `defval` and it has no blocks. Note that many of the methods -
+    such as `dot` and `svd` - require ``defval == 0`` (and assert this). The
+    main use of ``defval != 0`` is to be able to handle tensors of boolean
+    values that arise in comparisons.
 
-    charge: An integer such that if invar is True then all the blocks set in
-    sects must have keys k such that sum_i k[i]*dirs[i] % qodulus == charge.
+    `charge`: An integer such that if `invar` is True then all the blocks set
+    in `sects` must have keys `k` such that ``sum_i k[i]*dirs[i] % qodulus ==
+    charge``.
 
-    invar: A boolean. If True, then the tensor is invariant under the symmetry
-    determined by qodulus, in the sense described in the definition of charge.
-    If False, this condition is ignored and any block can be set. Note that as
-    with defval, many methods require the tensor to be invariant and invar ==
-    False is mainly used for handling vectors of singular values and
-    eigenvalues. If invar == True then defval must be 0, unless the tensor is a
-    scalar of charge 0.
+    `invar`: A boolean. If True, then the tensor is invariant under the
+    symmetry determined by `qodulus`, in the sense described in the definition
+    of `charge`.  If False, this condition is ignored and any block can be set.
+    Note that as with `defval`, many methods require the tensor to be invariant
+    and ``invar == False`` is mainly used for handling vectors of singular
+    values and eigenvalues. If ``invar == True`` then `defval` must be 0,
+    unless the tensor is a scalar of `charge` 0.
 
     Note that many of these rules are not constantly checked for and can be
     broken by the user. In such cases behavior of the class is not guaranteed.
-    The method check_consistency can be used to check that the tensor conforms
-    to this definition.
+    The method `check_consistency` can be used to check that the tensor
+    conforms to this definition.
     """
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -128,10 +130,10 @@ class AbelianTensor(TensorCommon):
         invar=True,
     ):
         """Initialize an AbelianTensor.
-        
-        Although qhape is a keyword argument to conform to the interface of
-        the Tensor class, it must in fact be set.  dirs defaults to
-        [1,1,...,1], sects defaults to {}.
+
+        Although `qhape` is a keyword argument to conform to the interface of
+        the `Tensor` class, it must in fact be set. `dirs` defaults to
+        ``[1,1,...,1]``, `sects` defaults to ``{}``.
         """
         assert qhape is not None
         if dirs is None:
@@ -169,12 +171,12 @@ class AbelianTensor(TensorCommon):
     __copy__ = copy
 
     def view(self):
-        """Return a view of self.
+        """Return a view of this tensor.
 
         A view is otherwise independent but identical to the original, but
-        its sects points to the same numpy arrays as the sects of the original.
-        In other words changing a whole block is ok, but modifying a block in
-        place modifies the original as well.
+        its `sects` points to the same numpy arrays as the sects of the
+        original.  In other words changing a whole block is ok, but modifying a
+        block in place modifies the original as well.
         """
         view = self.empty_like()
         # Note that this is a shallow copy.
@@ -185,14 +187,16 @@ class AbelianTensor(TensorCommon):
         """Either map a square matrix to a vector of its diagonals or a vector
         to diagonal square matrix.
 
-        If the input is a vector (which may be non-invariant) with qhape=[qim],
-        shape=[dim] and dir=[d], then the output is an invariant matrix with
-        qhape=[qim,qim], shape=[dim,dim] and dirs[d,-d].
+        If the input is a vector (which may be non-invariant) with ``qhape =
+        [qim]``, ``shape = [dim]`` and ``dir = [d]``, then the output is an
+        invariant matrix with ``qhape = [qim, qim]``, ``shape = [dim, dim]``
+        and ``dirs = [d, -d]``.
 
         If the input is a matrix it should be invariant and square in the sense
         that its two indices are compatible, i.e. could be contracted with each
-        other. If self.dirs[d,d] then the latter is flipped and a warning is
-        raised. The output is then a non-invariant vector with dirs=[d].
+        other. If ``self.dirs == [d, d]`` then the latter is flipped and a
+        warning is raised. The output is then a non-invariant vector with
+        ``dirs = [d]``.
         """
         assert len(self.shape) == 1 or len(self.shape) == 2
         if len(self.shape) == 1:
@@ -250,8 +254,8 @@ class AbelianTensor(TensorCommon):
 
     @classmethod
     def eye(cls, dim, qim=None, qodulus=None, dtype=np.float_):
-        """Return an identity tensor of shape=[dim,dim], qhape=[qim,qim] and
-        dirs[1,-1].
+        """Return an identity tensor of ``shape = [dim, dim]``, ``qhape = [qim,
+        qim]`` and ``dirs = [1, -1]``.
         """
         assert cls.check_qim_dim_match(qim, dim)
         dim = list(dim)
@@ -287,9 +291,10 @@ class AbelianTensor(TensorCommon):
     ):
         """Create a tensor initialized with a given numpy function.
 
-        Initialize_with will be called with different numpy_funcs to create
-        initializer functions such as zeros and random. It sets all the valid
-        blocks of the new tensor to numpy_func(block_shape, *args, **kwargs).
+        `initialize_with` will be called with different `numpy_funcs` to create
+        initializer functions such as `zeros` and `random`. It sets all the
+        valid blocks of the new tensor to ``numpy_func(block_shape, *args,
+        **kwargs)``.
         """
         shape = list(map(list, shape))
         qhape = list(map(list, qhape))
@@ -330,8 +335,8 @@ class AbelianTensor(TensorCommon):
         return res
 
     def empty_like(self):
-        """Initialize a tensor that is like a copy of self, but with an empty
-        sects.
+        """Initialize a tensor that is like a copy of this one, but with an
+        empty sects.
         """
         res = type(self)(
             self.shape.copy(),
@@ -349,7 +354,7 @@ class AbelianTensor(TensorCommon):
     # Methods for slicing, setting and getting elements
 
     def fill(self, value):
-        """Set all the elements of the tensor to be value.
+        """Set all the elements of the tensor to be `value`.
 
         This really means all, not just the ones in allowed blocks.
         """
@@ -358,13 +363,13 @@ class AbelianTensor(TensorCommon):
             v.fill(value)
 
     def __getitem__(self, k):
-        """Return the sector k of this tensor.
+        """Return the sector `k` of this tensor.
 
-        When self[k] is called, then first self.sects[k] is checked. If the
-        key is not found, we check if k still is a valid key for this tensor.
-        If yes, a block full of defval is created, assigned to self[k], and
-        returned. If not, a KeyError is raised, with message describing what
-        went wrong.
+        When ``self[k]`` is called, then first ``self.sects[k]`` is checked. If
+        the key is not found, we check if `k` still is a valid key for this
+        tensor.  If yes, a block full of `defval` is created, assigned to
+        ``self[k]``, and returned. If not, a `KeyError` is raised, with message
+        describing what went wrong.
         """
         try:
             return self.sects.__getitem__(k)
@@ -484,8 +489,8 @@ class AbelianTensor(TensorCommon):
     __invert__ = _generate_unary_deferer(opr.invert)
 
     def conj(self):
-        """Return a new tensor that is the complex conjugate of self, with
-        the directions of all the legs flipped and the charge of negated.
+        """Return a new tensor that is the complex conjugate of this one, with
+        the directions of all the indices flipped and the charge of negated.
         """
         res = self._defer_unary_elementwise(np.conj)
         res.dirs = list(map(opr.neg, res.dirs))
@@ -497,7 +502,7 @@ class AbelianTensor(TensorCommon):
     def astype(self, dtype, casting="unsafe", copy=True):
         """Change the dtype of the tensor.
 
-        By default creates a copy, but works in place if copy=False.
+        By default creates a copy, but works in place if ``copy=False``.
         """
         if not np.can_cast(self.dtype, dtype, casting=casting):
             raise ValueError(
@@ -522,11 +527,12 @@ class AbelianTensor(TensorCommon):
     abs = __abs__
 
     def _defer_unary_elementwise(self, op_func, *args, **kwargs):
-        """Produce a new tensor that is like self, but all the blocks v have
-        been acted on with op_func(v, *args, **kwargs), as has the defval.
-        
-        If defval ends up being mapped to something non-zero then the resulting
-        tensor is not invariant and is flagged as such.
+        """Produce a new tensor that is like this one, but all the blocks `v`
+        have been acted on with ``op_func(v, *args, **kwargs)``, as has the
+        `defval`.
+
+        If `defval` ends up being mapped to something non-zero then the
+        resulting tensor is not invariant and is flagged as such.
 
         This method can be used to create basic element-wise unary operations
         on tensors, such as negation and element-wise absolute value.
@@ -541,19 +547,20 @@ class AbelianTensor(TensorCommon):
         return res
 
     def _defer_binary_elementwise(self, B, op_func, *args, **kwargs):
-        """If both self and B are AbelianTensors, then their blocks and
-        defvals are operated on pair-wise with op_func(_, _, *args, **kwargs).
+        """If both `self` and `B` are `AbelianTensors`, then their blocks and
+        `defvals` are operated on pair-wise with ``op_func(_, _, *args,
+        **kwargs)``.
 
-        The two tensors should in this case be of the same form: same qnums,
-        dims, etc. If not, either warnings or errors are raised, depending on
+        The two tensors should in this case be of the same form: same `qnums`,
+        `dims`, etc. If not, either warnings or errors are raised, depending on
         whether the operation can still be carried out meaningfully.
 
-        If B is not an AbelianTensor then all the blocks and the defval of self
-        are operated on with op_func(_, B, *args, **kwargs).
+        If `B` is not an `AbelianTensor` then all the blocks and the `defval`
+        of `self` are operated on with ``op_func(_, B, *args, **kwargs)``.
 
         The operation is never in-place, and returns a a new tensor. The new
-        tensor is like self in its attributes, but may be non-invariant if its
-        defval ends up being non-zero.
+        tensor is like `self` in its attributes, but may be non-invariant if
+        its `defval` ends up being non-zero.
 
         This method can be used to create element-wise binary operations on
         tensors, such as basic arithmetic and comparisons.
@@ -641,8 +648,8 @@ class AbelianTensor(TensorCommon):
     def allclose(self, B, rtol=1e-05, atol=1e-08):
         """Check whether all of the elements of the two tensors are close to
         each other.
-        
-        See numpy.allclose for explanations of the tolerance arguments.
+
+        See `numpy.allclose` for explanations of the tolerance arguments.
         """
         # self and B should be of the same form and have the same qodulus.
         assert type(self).check_form_match(tensor1=self, tensor2=B)
@@ -739,7 +746,7 @@ class AbelianTensor(TensorCommon):
     def __len__(self):
         """Return the total dimension of the first index of this tensor.
 
-        This mimics the behavior of len on numpy ndarrays.
+        This mimics the behavior of `len` on numpy ndarrays.
         """
         return self.flatten_dim(self.shape[0])
 
@@ -759,18 +766,19 @@ class AbelianTensor(TensorCommon):
         """Return a corresponding numpy array.
 
         The order of the blocks in the result is such that along every index
-        the blocks are organized according to rising qnum. Note that this
-        means that the end result changes if the directions of some of the legs
-        are flipped before calling to_ndarray(). Thus if for example trace or
-        dot is called on the resulting numpy array, the result may be different
-        than for the AbelianTensor if the contraction requires flipping
-        directions. Similarly taking for example traces and diags along axes
-        that were not compatible in the AbelianTensor is a perfectly valid
-        thing to do for the ndarray, and gives different results.
+        the blocks are organized according to rising `qnum`. Note that this
+        means that the end result changes if the directions of some of the
+        indices are flipped before calling `to_ndarray`. Thus if for example
+        `trace` or `dot` is called on the resulting NumPy array, the result may
+        be different than for the `AbelianTensor` if the contraction requires
+        flipping directions. Similarly taking for example `traces` and `diags`
+        along axes that were not compatible in the `AbelianTensor` is a
+        perfectly valid thing to do for the `ndarray`, and gives different
+        results.
 
         All these concerns can be avoided by making sure that one only calls on
-        the ndarray operations that would have been valid on the AbelianTensor
-        without flipping any directions.
+        the `ndarray` operations that would have been valid on the
+        `AbelianTensor` without flipping any directions.
         """
         # Create an ndarray of the right shape, filled with self.defval.
         ndshape = type(self).flatten_shape(self.shape)
@@ -810,14 +818,14 @@ class AbelianTensor(TensorCommon):
         invar=True,
         charge=0,
     ):
-        """Build an AbelianTensor out of a given numpy ndarray, using the
+        """Build an `AbelianTensor` out of a given NumPy array, using the
         provided form data.
 
-        Although shape and qhape are keyword arguments to maintain a common
-        interface with Tensor, they are not optional. The blocks are read in
-        the same order as they are written in to_ndarray, i.e. rising qnum
-        along every leg. Note hence that the ordering of the qnums in the qhape
-        given has no effect.
+        Although `shape` and `qhape` are keyword arguments to maintain a common
+        interface with `Tensor`, they are not optional. The blocks are read in
+        the same order as they are written in `to_ndarray`, i.e. rising `qnum`
+        along every index. Note hence that the ordering of the `qnums` in the
+        `qhape` given has no effect.
         """
         if dirs is None:
             warnings.warn(
@@ -870,11 +878,12 @@ class AbelianTensor(TensorCommon):
     # Miscellaneous
 
     def isscalar(self):
+        """Return True is this tensor is scalar, False otherwise."""
         return not bool(self.shape)
 
     def _qod_func(self, q):
-        """Take a quantum number q and put it in the right range of values by
-        taking the modulus with self.qodulus, if necessary.
+        """Take a quantum number `q` and put it in the right range of values by
+        taking the modulus with `self.qodulus`, if necessary.
         """
         if self.qodulus is None:
             return q
@@ -882,8 +891,8 @@ class AbelianTensor(TensorCommon):
             return q % self.qodulus
 
     def is_valid_key(self, key):
-        """Return true if key is a valid block allowed by symmetry or
-        self.invar is False. Otherwise False.
+        """Return True if `key` is a valid block allowed by symmetry or
+        `self.invar` is False. Otherwise False.
         """
         if not self.invar:
             return True
@@ -896,9 +905,9 @@ class AbelianTensor(TensorCommon):
         return s == self.charge
 
     def compatible_indices(self, other, i, j):
-        """Return True if leg i of self may be contracted with leg j of
-        other, False otherwise.
-        
+        """Return True if index `i` of `self` may be contracted with index `j`
+        of `other`, False otherwise.
+
         Flipping of indices is allowed (but not done, this is only a check).
         """
         s_d = self.dirs[i]
@@ -906,22 +915,22 @@ class AbelianTensor(TensorCommon):
         s_qim = self.qhape[i]
         o_d = other.dirs[j]
         o_dim = other.shape[j]
-        # The -1 * s_d * o_d is -1 if the legs have the same direction, +1 if
-        # different. We multiply by it, because after this multiplication o_qim
-        # and s_qim should match for the legs to be compatible.
+        # The -1 * s_d * o_d is -1 if the indices have the same direction, +1
+        # if different. We multiply by it, because after this multiplication
+        # o_qim and s_qim should match for the indices to be compatible.
         o_qim = [-1 * s_d * o_d * q for q in other.qhape[j]]
         if other.qodulus is not None:
             o_qim = [q % other.qodulus for q in o_qim]
         # Check that the set of (q, d) pairs, where q is a quantum number and d
         # is dimension of the corresponding block, are the same for the two
-        # legs.
+        # indices.
         o_qimdim = set(zip(o_qim, o_dim))
         s_qimdim = set(zip(s_qim, s_dim))
         res = o_qimdim == s_qimdim
         return res
 
     def flip_dir(self, axis):
-        """Flip the direction of the given axis of self.
+        """Flip the direction of the given `axis` of `self`.
 
         The operation is not in-place, but a view is returned. The quantum
         numbers along given axis are also negated accordingly, so that the
@@ -948,11 +957,11 @@ class AbelianTensor(TensorCommon):
         return res
 
     def expand_dims(self, axis, direction=1):
-        """Return a view of self that has an additional leg at the position
-        axis.
+        """Return a view of `self` that has an additional index at the position
+        `axis`.
 
-        This new leg has only one qnum, 0, and dimension 1. The direction of
-        the new leg is a keyword argument 'direction' that defaults to 1.
+        This new index has only one `qnum`, 0, and dimension 1. The direction
+        of the new index is a keyword argument `direction` that defaults to 1.
         """
         res = self.empty_like()
         res.shape.insert(axis, [1])
@@ -970,11 +979,11 @@ class AbelianTensor(TensorCommon):
 
     @staticmethod
     def _sorted_shape_qhape(tensor=None, shape=None, qhape=None):
-        """Sort shape and qhape according to ascending qnum along every leg.
-        Used by to_ and from_ndarray.
+        """Sort `shape` and `qhape` according to ascending `qnum` along every
+        index.  Used by `to_` and `from_ndarray`.
 
-        Instead of explicitly given a shape and a qhape, a tensor whose form
-        data is to be used can also be given.
+        Instead of explicitly giving a `shape` and a `qhape`, a tensor whose
+        form data is to be used can also be given.
         """
         shape = tensor.shape if shape is None else shape
         qhape = tensor.qhape if qhape is None else qhape
@@ -987,11 +996,11 @@ class AbelianTensor(TensorCommon):
         return sorted_shp, sorted_qhp
 
     def defblock(self, key):
-        """Return an ndarray of the size of the block self[key], filled with
-        self.defval.
+        """Return an NumPy array of the size of the block ``self[key]``, filled
+        with `self.defval`.
 
-        This works regardless of whether self[key] is set or not and whether
-        the block is allowed by symmetry.
+        This works regardless of whether ``self[key]`` is set or not and
+        whether the block is allowed by symmetry.
         """
         block_shape = []
         for i, qnum in enumerate(key):
@@ -1000,8 +1009,8 @@ class AbelianTensor(TensorCommon):
         return block
 
     def is_full(self):
-        """Return True if the elements in self.sects cover all the elements
-        in self.
+        """Return True if the elements in `self.sects` cover all the elements
+        in `self`.
         """
         elements_in_sects = sum(
             map(opr.attrgetter("size"), self.sects.values())
@@ -1016,7 +1025,7 @@ class AbelianTensor(TensorCommon):
         """Check internal consistency of a tensor.
 
         Check that self conforms to the defition given in the documentation
-        of the class. If yes, return True, otherwise raise an assertion error.
+        of the class. If yes, return True, otherwise raise an `AssertionError`.
         This method is meant to be used by the user (probably for debugging)
         and is not called anywhere in the class.
         """
@@ -1050,15 +1059,15 @@ class AbelianTensor(TensorCommon):
 
     @classmethod
     def check_qim_dim_match(cls, qim, dim):
-        """Check that the given qim and dim match, i.e. are valid for the same
-        leg.
+        """Check that the given `qim` and `dim` match, i.e. are valid for the
+        same index.
         """
         return len(qim) == len(dim)
 
     @classmethod
     def check_qhape_shape_match(cls, qhape, shape):
-        """Check that the given qhape and shape match, i.e. are valid for the
-        same tensor.
+        """Check that the given `qhape` and `shape` match, i.e. are valid for
+        the same tensor.
         """
         return all(
             cls.check_qim_dim_match(qim, dim) for qim, dim in zip(qhape, shape)
@@ -1080,10 +1089,10 @@ class AbelianTensor(TensorCommon):
         """Check that the form data of two tensors match.
 
         Check that the given two tensors have the same form in the sense that
-        if their legs are all flipped to point in the same direction then both
-        tensors have the same qnums for the same indices and with the same
-        dimensions. Instead of giving two tensors, sets of qhapes, shapes, and
-        dirs and a qodulus can also be given.
+        if their indices are all flipped to point in the same direction then
+        both tensors have the same `qnums` for the same indices and with the
+        same dimensions. Instead of giving two tensors, sets of `qhapes`,
+        `shapes`, and `dirs` and a `qodulus` can also be given.
         """
         if tensor1 is not None:
             qhape1 = tensor1.qhape
@@ -1200,24 +1209,24 @@ class AbelianTensor(TensorCommon):
     ):
         """Join indices together in the spirit of reshape.
 
-        inds is either an iterable of indices, in which case they are joined,
+        `inds` is either an iterable of indices, in which case they are joined,
         or an iterable of iterables of indices, in which case the indices
-        listed in each element of inds (a "batch") will be joined. So for
-        instance inds=[[0,1], [2,3]] causes the joining of both 0 and 1, and of
-        2 and 3, at the same time.
+        listed in each element of `inds` (a "batch") will be joined. So for
+        instance ``inds=[[0,1], [2,3]]`` causes the joining of both 0 and 1,
+        and of 2 and 3, at the same time.
 
         Before any joining is done the indices are transposed so that for every
         batch of indices to be joined the first remains in place and the others
         are moved to be after it in the order given. The order in which the
         batches are given does not matter.
 
-        dirs are the directions of the new indices, defaults to [1,...,1]. If a
-        batch of indices to be joined consists of only one index, its direction
-        will be flipped to be as in dirs.
+        `dirs` are the directions of the new indices, defaults to
+        ``[1,...,1]``. If a batch of indices to be joined consists of only one
+        index, its direction will be flipped to be as in `dirs`.
 
-        If return_transposed_shape_data is True, then the shape, qhape and dirs
-        (in this order) of the tensor after transposing but before reshaping
-        are returned as well.
+        If `return_transposed_shape_data` is True, then the `shape`, `qhape`
+        and `dirs` (in this order) of the tensor after transposing but before
+        reshaping are returned as well.
 
         The method does not modify the original tensor, but returns a copy or a
         view.
@@ -1421,27 +1430,28 @@ class AbelianTensor(TensorCommon):
     def split_indices(self, indices, dims, qims=None, dirs=None):
         """Split indices in the spirit of reshape.
 
-        Indices is an iterable of indices to be split. Dims is an iterable such
-        that dims[i]=dim_batch is an iterable of lists of dimensions, each list
-        giving the dimensions along a new index that will come out of splitting
-        indices[i]. qims correspondingly gives the qims of the new indices, and
-        dirs gives the new directions.
+        `indices` is an iterable of indices to be split. `dims` is an iterable
+        such that ``dim_batch=dims[i]`` is an iterable of lists of dimensions,
+        each list giving the dimensions along a new index that will come out of
+        splitting ``indices[i]``. `qims` correspondingly gives the `qims` of
+        the new indices, and `dirs` gives the new directions.
 
         An example clarifies:
-        Suppose self has shape [dim1, dim2, dim3, dim4], qhape [qim1, qim2,
-        qim3, qim4] and dirs [d1,d2,d3,d4]. Suppose then that indices = [1,3],
-        dims = [[dimA, dimB], [dimC, dimD]], qims = [[qimA, qimB], [qimC,
-        qimD]] and dirs = [[dA, dB] [dC, dD]].  Then the resulting tensor will
-        have shape [dim1, dimA, dimB, dim3, dimC, dimD], qhape [qim1, qimA,
-        qimB, qim3, qimC, qimD] and dirs [d1, dA, dB, d3, dC, dD].  All this
-        assuming that that dims and qims are such that joining qimA and qimB
-        gives qim2, etc.
+        Suppose `self` has `shape` ``[dim1, dim2, dim3, dim4]``, `qhape`
+        ``[qim1, qim2, qim3, qim4]``, and `dirs` ``[d1,d2,d3,d4]``. Suppose
+        then that ``indices = [1,3]``, ``dims = [[dimA, dimB], [dimC, dimD]]``,
+        ``qims = [[qimA, qimB], [qimC, qimD]]`` and ``dirs = [[dA, dB] [dC,
+        dD]]``.  Then the resulting tensor will have `shape` ``[dim1, dimA,
+        dimB, dim3, dimC, dimD]``, `qhape` ``[qim1, qimA, qimB, qim3, qimC,
+        qimD]``, and `dirs` ``[d1, dA, dB, d3, dC, dD]``.  All this assuming
+        that that `dims` and `qims` are such that joining `qimA` and `qimB`
+        gives `qim2`, etc.
 
         Instead of a list of indices a single index may be given.
-        Correspondingly dims, qims and dirs should then have one level of depth
-        less as well.
+        Correspondingly `dims`, `qims` and `dirs` should then have one level of
+        depth less as well.
 
-        split_indices does not modify the original tensor, but returns a copy
+        `split_indices` does not modify the original tensor, but returns a copy
         or a view.
         """
         # Formatting the input so that indices is a list and dim_batches and
@@ -1594,8 +1604,8 @@ class AbelianTensor(TensorCommon):
     def transpose(self, p=(1, 0)):
         """Transpose indices, return a view.
 
-        The optional argument p should be a permutation of all the indices. By
-        default p=(1, 0), which is the transpose of a matrix.
+        The optional argument `p` should be a permutation of all the indices.
+        By default ``p=(1, 0)``, which is the transpose of a matrix.
         """
         res = self.empty_like()
         for k, v in self.sects.items():
@@ -1607,17 +1617,17 @@ class AbelianTensor(TensorCommon):
         return res
 
     def trace(self, axis1=0, axis2=1):
-        """Take a trace of self over axis1 and axis2.
+        """Take a trace over `axis1` and `axis2`.
 
         This differs from the usual trace in the sense that it is more like
-        connecting the two legs and contracting. This means that if the legs
-        axis1 and axis2 don't have the same dim and qim the function will raise
-        an error. If the dirs don't match (both are 1 or both are -1) then one
-        of them is flipped and a warning is raised.
+        connecting the two indices and contracting. This means that if the
+        indices `axis1` and `axis2` don't have the same `dim` and `qim` the
+        function will raise an error. If the `dirs` don't match (both are 1 or
+        both are -1) then one of them is flipped and a warning is raised.
 
-        Note that the diagonal consists always of blocks with the same qnum on
-        axis1 and axis2 (once dirs are opposite). This means that the trace of
-        an invariant charge != 0 tensor is always a zero-tensor.
+        Note that the diagonal consists always of blocks with the same `qnum`
+        on `axis1` and `axis2` (once `dirs` are opposite). This means that the
+        trace of an invariant ``charge != 0`` tensor is always a zero-tensor.
         """
         assert self.compatible_indices(self, axis1, axis2)
         if axis1 < axis2:
@@ -1665,12 +1675,12 @@ class AbelianTensor(TensorCommon):
     def multiply_diag(self, diag_vect, axis, direction="r"):
         """Multiply by a diagonal matrix on one axis.
 
-        The result of multiply_diag is the same as
-        `self.dot(diag_vect.diag(), (axis, 0))`
-        if direction is "right" or "r" (the diagonal matrix comes from the
+        The result of `multiply_diag` is the same as
+        ``self.dot(diag_vect.diag(), (axis, 0))``
+        if `direction` is "right" or "r" (the diagonal matrix comes from the
         right) or
-        `self.dot(diag_vect.diag(), (axis, 1))`
-        if direction is "left" or "l". This operation is just done without
+        ``self.dot(diag_vect.diag(), (axis, 1))``
+        if `direction` is "left" or "l". This operation is just done without
         constructing the full diagonal matrix.
         """
         assert diag_vect.qodulus == self.qodulus
@@ -1710,7 +1720,8 @@ class AbelianTensor(TensorCommon):
     def matrix_dot(self, other):
         """Take the dot product of two tensors of order < 3.
 
-        If either one is a matrix, it must be invariant and have defval == 0.
+        If either one is a matrix, it must be invariant and have ``defval ==
+        0``.
         """
         assert self.qodulus == other.qodulus
 
@@ -1869,24 +1880,25 @@ class AbelianTensor(TensorCommon):
     ):
         """Find eigenvalues and eigenvectors of a matrix.
 
-        The input must have defval == 0, invar == True, charge == 0 and must be
-        square in the sense that the dimensions must have the same qim and dim
-        and opposing dirs.
+        The input must have ``defval == 0``, ``invar == True``, ``charge ==
+        0``, and must be square in the sense that the dimensions must have the
+        same `qim` and `dim` and opposing `dirs`.
 
-        If hermitian is True the matrix is assumed to be hermitian.
+        If `hermitian` is True the matrix is assumed to be hermitian.
 
         Truncation works like for SVD, see the docstring there for more.
 
-        If sparse is True, a sparse eigenvalue decomposition, using power
-        methods from scipy.sparse.eigs or eigsh, is used. This decomposition is
-        done to find max(chis) eigenvalues, after which the decomposition may
-        be truncated further if the truncation error so allows. Thus max(chis)
-        should be much smaller than the full size of the matrix, if sparse is
-        True.
+        If `sparse` is True, a sparse eigenvalue decomposition, using power
+        methods from `scipy.sparse.eigs` or `eigsh`, is used. This
+        decomposition is done to find ``max(chis)`` eigenvalues, after which
+        the decomposition may be truncated further if the truncation error so
+        allows. Thus ``max(chis)`` should be much smaller than the full size of
+        the matrix, if `sparse` is True.
 
-        The output is in the form S, U, where S is a non-invariant vector of
-        eigenvalues and U is a matrix that has as its columns the eigenvectors.
-        Both have the same dim and qim as self.
+        The return value is ``S, U, rel_err``, where `S` is a non-invariant
+        vector of eigenvalues and `U` is a matrix that has as its columns the
+        eigenvectors. Both have the same `dim` and `qim` as self. `rel_err` is
+        the truncation error.
         """
         if print_errors != "deprecated":
             msg = (
@@ -2030,39 +2042,40 @@ class AbelianTensor(TensorCommon):
     ):
         """Singular value decompose a matrix.
 
-        The matrix must have invar == True and defval == 0.
+        The matrix must have ``invar == True`` and ``defval == 0``.
 
-        The optional argument chis is a list of bond dimensions. The SVD is
-        truncated to one of these dimensions chi, meaning that only chi largest
-        singular values are kept. If chis is a single integer (either within a
-        singleton list or just as a bare integer) this dimension is used. If
-        eps==0, the largest value in chis is used. Otherwise the smallest chi
-        in chis is used, such that the relative error made in the truncation is
-        smaller than eps. The truncation error is by default the Frobenius norm
-        of the difference, but can be specified with the keyword agument
-        trunc_err_func.
+        The optional argument `chis` is a list of bond dimensions. The SVD is
+        truncated to one of these dimensions `chi`, meaning that only `chi`
+        largest singular values are kept. If `chis` is a single integer (either
+        within a singleton list or just as a bare integer) this dimension is
+        used. If ``eps == 0``, the largest value in `chis` is used. Otherwise
+        the smallest `chi` in `chis` is used, such that the relative error made
+        in the truncation is smaller than `eps`. The truncation error is by
+        default the Frobenius norm of the difference, but can be specified with
+        the keyword agument `trunc_err_func`.
 
         An exception to the above is made by degenerate singular values. By
         default truncation is never done so that some singular values are
         included while others of the same value are left out. If this is about
-        to happen, chi is decreased so that none of the degenerate singular
+        to happen, `chi` is decreased so that none of the degenerate singular
         values are included. This default behavior can be changed with the
-        keyword argument break_degenerate=True. The default threshold for when
+        keyword argument `break_degenerate`. The default threshold for when
         singular values are considered degenerate is 1e-6. This can be changed
-        with the keyword argument degeneracy_eps.
+        with the keyword argument `degeneracy_eps`.
 
-        If sparse is True, a sparse SVD, using power methods from
-        scipy.sparse.svds, is used. This SVD is done to find max(chis) singular
-        values, after which the decomposition may be truncated further if the
-        truncation error so allows. Thus max(chis) should be much smaller than
-        the full size of the matrix, if sparse is True.
+        If `sparse` is True, a sparse SVD, using power methods from
+        `scipy.sparse.svds`, is used. This SVD is done to find ``max(chis)``
+        singular values, after which the decomposition may be truncated further
+        if the truncation error so allows. Thus ``max(chis)`` should be much
+        smaller than the full size of the matrix, if `sparse` is True.
 
-        The method returns the tuple U, S, V, rel_err, where S is a
-        non-invariant vector and U and V are unitary matrices. They are such
-        that U.diag(S).V = self, where the equality is appromixate if there is
-        truncation. U and S have always charge 0, but V has the same charge as
-        self. U has dirs [d,-d] where d = self.dirs[0], but V has the same dirs
-        as self. rel_err is the truncation error.
+        The method returns the tuple ``U, S, V, rel_err``, where `S` is a
+        non-invariant vector and `U` and `V` are unitary matrices. They are
+        such that ``U.diag(S).V == self``, where the equality is appromixate if
+        there is truncation. `U` and `S` have always charge 0, but `V` has the
+        same charge as `self`. `U` has `dirs` ``[d, -d]`` where ``d =
+        self.dirs[0]``, but `V` has the same `dirs` as `self`. `rel_err` is the
+        truncation error.
         """
         if print_errors != "deprecated":
             msg = (
