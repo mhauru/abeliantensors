@@ -14,16 +14,14 @@ for use in tensor network algorithms, and works well with the
 
 If you just want to use the library:
 ```
-pip install --user git+https://github.com/mhauru/abeliantensors
+pip install --user abeliantensors
 ```
 
 If you also want to modify and develop the library
 ```
 git clone https://github.com/mhauru/abeliantensors
-cd abeliantensors
-pip install --user -e .[tests]
+pip install --user -e abeliantensors/[tests,doc]
 ```
-after which you can run the test suite by just calling `pytest`.
 
 ## Usage
 
