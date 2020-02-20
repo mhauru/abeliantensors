@@ -25,6 +25,9 @@ pip install --user -e abeliantensors/[tests,doc]
 
 ## Usage
 
+For reference documentation see
+[here](https://abeliantensors.readthedocs.io/en/latest/API.html).
+
 abeliantensors exports classes `TensorU1`, `TensorZ2`, and `TensorZ3`. Other
 cyclic groups Zn can be implemented with one-liners, see the file
 `symmetrytensors.py` for examples. abeliantensors also exports a class called
@@ -107,7 +110,7 @@ E, U = aadg.eig([0, 1], [2, 3], hermitian=True, eps=1e-5)
 ```
 
 There are many other user-facing methods and features, for more, see
-the [API docs](https://abeliantensors.readthedocs.io/en/latest/API.html).
+the [reference documentation](https://abeliantensors.readthedocs.io/en/latest/API.html).
 
 ## Demo and performance
 
