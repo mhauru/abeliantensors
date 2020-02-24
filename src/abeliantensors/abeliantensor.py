@@ -1178,7 +1178,7 @@ class AbelianTensor(TensorCommon):
                         else:
                             break
                 err = trunc_err_func(S, chi)
-                if err <= eps or last_out == 0.0:
+                if err < eps:
                     break
         else:
             err = 0
@@ -1565,7 +1565,6 @@ class AbelianTensor(TensorCommon):
                     slc[indices[i]] = slice(cumdim[0], cumdim[1])
                 new_key = tuple(new_key)
                 slc = tuple(slc)
-                # Blam!
                 new_sects[new_key] = v[slc].reshape(block_shape)
         res = self.empty_like()
         res.sects = new_sects
