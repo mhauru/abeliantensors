@@ -1,5 +1,6 @@
 """The main test suite for abeliantensors."""
 import numpy as np
+import pytest
 from ncon import ncon
 from .ndarray_svd import svd, eig
 from abeliantensors import Tensor
@@ -39,6 +40,9 @@ def check_internal_consistency(T):
 def test_to_and_from_ndarray(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Test converting random tensors to ndarrays and back, checking that this
+    leaves them invariant.
+    """
     for iter_num in range(n_iters):
         T = rtensor()
         T_np = T.to_ndarray()
@@ -53,7 +57,10 @@ def test_to_and_from_ndarray(
 def test_arithmetic_and_comparison(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Test basic arthmetic and comparison operations."""
     for iter_num in range(n_iters):
+        # Create two tensors with the same shape, qhape, and dirs, but possibly
+        # different charges.
         s = rshape()
         q = rqhape(s)
         d = rdirs(shape=s)
@@ -95,22 +102,31 @@ def test_arithmetic_and_comparison(
 def test_transposing(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Test transposing and swapaxes on random tensors, checking consistency
+    and comparing agaings np.transpose.
+    """
     for iter_num in range(n_iters):
+        # Create a random tensor with at least one index.
         T = rtensor(nlow=1)
         shp = T.shape
+        # Pick to random indices.
         i = np.random.randint(low=0, high=len(shp))
         j = np.random.randint(low=0, high=len(shp))
+        # Check that the order of swapaxes arguments doesn't matter.
         S = T.copy()
         S = S.swapaxes(i, j)
         T = T.swapaxes(j, i)
         assert (S == T).all()
         check_internal_consistency(T)
+        # Check that trivial swaps and transposes are noops.
         T = T.swapaxes(i, i)
         assert (S == T).all()
         check_internal_consistency(T)
         T = T.transpose(range(len(shp)))
         assert (S == T).all()
         check_internal_consistency(T)
+        # Make a random permutation, check that its done correctly using
+        # np.transpose to compare.
         perm = list(range(len(shp)))
         np.random.shuffle(perm)
         T_copy = T.copy()
@@ -120,9 +136,12 @@ def test_transposing(
         assert np.all(T_tr_np == T_np_tr)
 
 
-def test_splitting_and_joining(
+def test_splitting_and_joining_two(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """First join and then split back two indices of a random tensors. Check
+    that this leaves the tensor invariant.
+    """
     for iter_num in range(n_iters):
         # First join and then split two indices, compare with original.
         T = rtensor(nlow=2)
@@ -130,6 +149,7 @@ def test_splitting_and_joining(
         shp = T.shape
         qhp = T.qhape
 
+        # Pick to random indices (that must be different).
         i = np.random.randint(low=0, high=len(shp))
         j = i
         while j == i:
@@ -146,8 +166,10 @@ def test_splitting_and_joining(
             di, dj = T.dirs[i], T.dirs[j]
         else:
             di, dj = None, None
+        # Join the indices, with the new direction being random.
         new_d = rdirs(length=1)[0]
         T_joined = T.join_indices(i, j, dirs=new_d)
+        # Check that this didn't affect the original tensor.
         assert (T == T_orig).all()
         T = T_joined
         check_internal_consistency(T)
@@ -161,30 +183,39 @@ def test_splitting_and_joining(
         if T.dirs is not None:
             assert T.dirs[i_new] == new_d
 
-        if i != j:
-            T_before_split = T.copy()
-            T_split = T.split_indices(
-                i_new, (i_dim, j_dim), qims=(i_qim, j_qim), dirs=(di, dj)
-            )
-            assert (T_before_split == T).all()
-            T = T_split
-            check_internal_consistency(T)
-            while j_new != j:
-                if j_new > j:
-                    T = T.swapaxes(j_new, j_new - 1)
-                    j_new = j_new - 1
-                else:
-                    T = T.swapaxes(j_new, j_new + 1)
-                    j_new = j_new + 1
-            check_internal_consistency(T)
+        T_before_split = T.copy()
+        # Split the indices back to how they were.
+        T_split = T.split_indices(
+            i_new, (i_dim, j_dim), qims=(i_qim, j_qim), dirs=(di, dj)
+        )
+        # Check that this didn't modify the argument.
+        assert (T_before_split == T).all()
+        T = T_split
+        check_internal_consistency(T)
+        # Rotate the split indices back to their original places.
+        while j_new != j:
+            if j_new > j:
+                T = T.swapaxes(j_new, j_new - 1)
+                j_new = j_new - 1
+            else:
+                T = T.swapaxes(j_new, j_new + 1)
+                j_new = j_new + 1
+        check_internal_consistency(T)
+        # Check that we are back where we started.
         assert (T_orig == T).all()
 
-    # First join then split many indices, don't compare.
-    for iter_num in range(n_iters):
-        T = rtensor(nlow=1)
-        T_orig = T.copy()
-        shp = T.shape
 
+def test_splitting_and_joining_many(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
+    """First join then split many indices of random tensors. Don't compare to
+    the original one though, because doing the permutations right would just be
+    so much work.
+    """
+    for iter_num in range(n_iters):
+        T = rtensor(nlow=1)  # Random tensor with at least one index.
+
+        # Generate random sizes for the index batches to be joined.
         batch_sizes = []
         while True:
             new_size = np.random.randint(low=1, high=len(T.shape) + 1)
@@ -192,6 +223,8 @@ def test_splitting_and_joining(
                 batch_sizes.append(new_size)
             else:
                 break
+        # Generate the random index batches. We first generate a list of all
+        # the indices that will be joined, then split it into batches.
         index_batches = []
         sum_inds = list(
             np.random.choice(
@@ -203,6 +236,8 @@ def test_splitting_and_joining(
             index_batches.append(sum_inds[cumulator : cumulator + b_n])
             cumulator += b_n
 
+        # Figure out the remaining indices after the join, and the all the
+        # shape information involved.
         not_joined = sorted(set(range(len(T.shape))) - set(sum_inds))
         batch_firsts = [batch[0] for batch in index_batches]
         remaining_indices = sorted(not_joined + batch_firsts)
@@ -222,9 +257,10 @@ def test_splitting_and_joining(
             dir_batches = None
         new_dirs = rdirs(length=len(index_batches))
 
+        # First join, then split back, and check that the operation goes
+        # through and returns an internally consistent tensor.
         T = T.join_indices(*tuple(index_batches), dirs=new_dirs)
         check_internal_consistency(T)
-
         T = T.split_indices(
             batch_new_indices, dim_batches, qims=qim_batches, dirs=dir_batches,
         )
@@ -234,9 +270,13 @@ def test_splitting_and_joining(
 def test_to_and_from_matrix(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Reshape random tensors into matrices and back, check that this leaves
+    them invariant.
+    """
     for iter_num in range(n_iters):
         T = rtensor()
         T_orig = T.copy()
+        # Partition the indices of T into two sets, i_list and its complement.
         n = np.random.randint(low=0, high=len(T.shape) + 1)
         if n:
             i_list = list(
@@ -245,6 +285,7 @@ def test_to_and_from_matrix(
         else:
             i_list = []
         i_list_compl = sorted(set(range(len(T.shape))) - set(i_list))
+        # Reshape T into a matrix.
         (
             T_matrix,
             T_transposed_shape,
@@ -256,8 +297,12 @@ def test_to_and_from_matrix(
         assert (T == T_orig).all()
         T = T_matrix
         check_internal_consistency(T)
+
+        # Permute the indices of T_orig as they were permuted by to_matrix.
         T_orig = T_orig.transpose(i_list + i_list_compl)
         assert T_transposed_shape == T_orig.shape
+
+        # Reshape the matrix back into a tensor.
         l_dims = T_transposed_shape[: len(i_list)]
         r_dims = T_transposed_shape[len(i_list) :]
         if T_transposed_qhape is not None:
@@ -284,14 +329,17 @@ def test_to_and_from_matrix(
         assert (T == T_matrix).all()
         T = T_tensor
         check_internal_consistency(T)
+        # Check that we are back where we started.
         assert (T == T_orig).all()
 
 
-def test_diag(
+def test_diag_vector_to_matrix(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Generate a random vector, turn it into a diagonal matrix, compare
+    against NumPy.
+    """
     for iter_num in range(n_iters):
-        # Vectors to matrices
         T = rtensor(n=1, invar=False)
         T_np = T.to_ndarray()
         T_diag = T.diag()
@@ -303,9 +351,15 @@ def test_diag(
             dirs=T_diag.dirs,
             charge=T_diag.charge,
         )
-
         assert T_np_diag.allclose(T_diag)
-        # Matrices to vectors
+
+
+def test_diag_matrix_to_vector(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
+    """Generate a random matrix, extract its diagonal, compare against NumPy.
+    """
+    for iter_num in range(n_iters):
         shp = rshape(n=2)
         shp[1] = shp[0]
         qhp = rqhape(shape=shp)
@@ -330,6 +384,9 @@ def test_diag(
 def test_trace(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Generate a random tensor with at least two indices, trace over two of
+    them, and compare against NumPy.
+    """
     for iter_num in range(n_iters):
         shp = rshape(nlow=2)
         qhp = rqhape(shape=shp)
@@ -347,40 +404,49 @@ def test_trace(
         tr = T.trace(axis1=i, axis2=j)
         np_tr = np.trace(T_np, axis1=i, axis2=j)
         check_internal_consistency(tr)
-        np_tr_tensor = type(T).from_ndarray(
+        np_tr = type(T).from_ndarray(
             np_tr,
             shape=tr.shape,
             qhape=tr.qhape,
             dirs=tr.dirs,
             charge=tr.charge,
         )
-        assert np_tr_tensor.allclose(tr)
+        assert np_tr.allclose(tr)
 
 
 def test_multiply_diag(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Generate a random tensor and diagonal matrix, use multiply_diag to
+    multiply the them, compare against NumPy.
+    """
     for iter_num in range(n_iters):
-        right = np.random.randint(low=0, high=2)
+        # Generate a random tensor, and index to multiply on, and whether to do
+        # it from the right or the left.
         T = rtensor(nlow=1, chilow=1)
         T_orig = T.copy()
         i = np.random.randint(low=0, high=len(T.shape))
+        right = np.random.randint(low=0, high=2)
 
+        # Generate the random vector.
         D_shape = [T.shape[i]]
         D_qhape = None if T.qhape is None else [T.qhape[i]]
         D_dirs = None if T.dirs is None else [T.dirs[i] * (1 - 2 * right)]
         D = rtensor(
-            shape=D_shape, qhape=D_qhape, dirs=D_dirs, invar=False, charge=0,
+            shape=D_shape, qhape=D_qhape, dirs=D_dirs, invar=False, charge=0
         )
 
+        # Do the multiplication using NumPy.
         T_np = T.to_ndarray()
         D_np = D.to_ndarray()
         prod_np = np.tensordot(T_np, np.diag(D_np), (i, 1 - right))
+        # Permute the index back to its original place.
         perm = list(range(len(prod_np.shape)))
         d = perm.pop(-1)
         perm.insert(i, d)
         prod_np = np.transpose(prod_np, perm)
 
+        # Compare multiply_diag to NumPy.
         direction = "right" if right else "left"
         TD = T.multiply_diag(D, i, direction=direction)
         assert (T == T_orig).all()
@@ -389,28 +455,36 @@ def test_multiply_diag(
         assert np.allclose(T.to_ndarray(), prod_np)
 
 
-def test_product(
+def test_product_invariant(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Generate two invariant tensors, contract them over a random set of legs,
+    and compare with NumPy.
+    """
     for iter_num in range(n_iters):
-        shp1 = rshape(nlow=1)
+        shp1 = rshape(nlow=1)  # Shape of the first tensor
+        # Choose how many indices to contract order, and which indices of
+        # tensor #1 those should be.
         n = np.random.randint(low=1, high=len(shp1) + 1)
         if n:
             i_list = list(np.random.choice(len(shp1), size=n, replace=False))
         else:
             i_list = []
-        shp2 = rshape(nlow=n, chilow=1)
+        # Generate the shape of the second tensor, and which indices it should
+        # be contracted over.
+        shp2 = rshape(nlow=n)
         if n:
             j_list = list(np.random.choice(len(shp2), size=n, replace=False))
         else:
             j_list = []
+        # Make sure contracted indices have a dimension of at least 1.
         for k in range(n):
-            # A summation index should not have dimension 0
             dim1 = shp1[i_list[k]]
             if np.sum(dim1) < 1:
                 dim1 = rshape(n=1, chilow=1)[0]
                 shp1[i_list[k]] = dim1
             shp2[j_list[k]] = dim1
+        # Generate tensor #1.
         qhp1 = rqhape(shp1)
         qhp2 = rqhape(shp2)
         if qhp1 is not None:
@@ -418,6 +492,7 @@ def test_product(
                 qhp2[j_list[k]] = qhp1[i_list[k]]
         T1 = rtensor(shape=shp1, qhape=qhp1)
         T1_orig = T1.copy()
+        # Generate tensor #2.
         if T1.dirs is not None:
             dirs2 = rdirs(shape=shp2)
             for i, j in zip(i_list, j_list):
@@ -426,12 +501,14 @@ def test_product(
             dirs2 = None
         T2 = rtensor(shape=shp2, qhape=qhp2, dirs=dirs2)
         T2_orig = T2.copy()
+        # Do the product.
         T1_np = T1.to_ndarray()
         T2_np = T2.to_ndarray()
         T = T1.dot(T2, (i_list, j_list))
         assert (T1 == T1_orig).all()
         assert (T2 == T2_orig).all()
         check_internal_consistency(T)
+        # Assert that the result has the right shape.
         i_list_compl = sorted(set(range(len(shp1))) - set(i_list))
         j_list_compl = sorted(set(range(len(shp2))) - set(j_list))
         product_shp = [shp1[i] for i in i_list_compl] + [
@@ -440,18 +517,31 @@ def test_product(
         if type(T) == Tensor:
             product_shp = Tensor.flatten_shape(product_shp)
         assert T.shape == product_shp
+        # Do the product using NumPy and compare.
         T_np = np.tensordot(T1_np, T2_np, (i_list, j_list))
         assert np.allclose(T_np, T.to_ndarray())
 
-        # Products of non-invariant vectors.
+
+def test_product_noninvariant(
+    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+):
+    """Generate two tensors that are either matrices and vectors. If they are
+    vectors, make them *not* be invariant. Contract them and compare with
+    NumPy.
+    """
+    for iter_num in range(n_iters):
+        # Generate tensor #1.
         n1 = np.random.randint(1, 3)
         T1 = rtensor(n=n1, chilow=1, invar=(n1 != 1))
 
+        # Generate tensor #2.
         n2 = np.random.randint(1, 3)
         shp2 = rshape(n=n2, chilow=1)
         qhp2 = rqhape(shape=shp2)
         dirs2 = rdirs(shape=shp2)
         c2 = rcharge()
+        # The last index of T1 will be contracted with the first index of T2,
+        # so make those match.
         shp2[0] = T1.shape[-1]
         if T1.qhape is not None:
             qhp2[0] = T1.qhape[-1]
@@ -460,6 +550,7 @@ def test_product(
             shape=shp2, qhape=qhp2, dirs=dirs2, charge=c2, invar=(n2 != 1)
         )
 
+        # Do the product and compare.
         T1_orig = T1.copy()
         T2_orig = T2.copy()
         check_internal_consistency(T1)
@@ -474,10 +565,37 @@ def test_product(
         assert np.allclose(T_np, T.to_ndarray())
 
 
+# We test SVD with a tiny amount of truncation and substantial amoun of
+# truncation, as well as enforcing full bond dimension with chis. We do not
+# test eps=0, because there may be singular values that are 0 by symmetry,
+# which makes comparing with NumPy unfair.
+@pytest.mark.parametrize("eps", [1e-15, 1e-3])
+@pytest.mark.parametrize("truncate", [True, False])
 def test_svd(
-    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters,
+    tensorclass,
+    n_qnums,
+    rshape,
+    rqhape,
+    rdirs,
+    rcharge,
+    rtensor,
+    eps,
+    truncate,
 ):
+    """Generate a random  tensor, SVD it with or without truncation, and
+    reconstruct it from the SVD. Check that the reconstructing matches up to
+    truncation error, that truncation error is correctly reported, and compare
+    with NumPy.
+    """
+    if truncate:
+        chi = np.random.randint(low=1, high=6)
+        chis = list(range(chi + 1))
+    else:
+        chis = None
     for iter_num in range(n_iters):
+        # Generate a random tensor with at least two indices, and partition the
+        # indices into two groups.
         T = rtensor(nlow=2, chilow=1)
         T_orig = T.copy()
         T_np = T.to_ndarray()
@@ -491,65 +609,31 @@ def test_svd(
         i_list_compl = sorted(set(range(len(T.shape))) - set(i_list))
         np.random.shuffle(i_list_compl)
 
-        # (Almost) no truncation.
-        U, S, V = T.svd(i_list, i_list_compl, eps=1e-15)
+        # Do the SVD and compare the U*S*V to T.
+        U, S, V, rel_err = T.svd(
+            i_list, i_list_compl, chis=chis, eps=eps, return_rel_err=True
+        )
         assert (T == T_orig).all()
         check_internal_consistency(U)
         check_internal_consistency(S)
         check_internal_consistency(V)
         US = U.dot(S.diag(), (len(i_list), 0))
         USV = US.dot(V, (len(i_list), 0))
-        T = T.transpose(i_list + i_list_compl)
-        assert USV.allclose(T)
-
-        U_np_svd, S_np_svd, V_np_svd = svd(
-            T_np, i_list, i_list_compl, eps=1e-15
-        )
-        U_svd_np, S_svd_np, V_svd_np = (
-            U.to_ndarray(),
-            S.to_ndarray(),
-            V.to_ndarray(),
-        )
-
-        order = np.argsort(-S_svd_np)
-        S_svd_np = S_svd_np[order]
-        U_svd_np = U_svd_np[..., order]
-        V_svd_np = V_svd_np[order, ...]
-        # abs is needed because of gauge freedom in SVD. We assume here
-        # that there are no degenerate singular values.
-        assert np.allclose(np.abs(U_np_svd), np.abs(U_svd_np))
-        assert np.allclose(np.abs(S_np_svd), np.abs(S_svd_np))
-        assert np.allclose(np.abs(V_np_svd), np.abs(V_svd_np))
-
-        # Truncation.
-        chi = np.random.randint(low=1, high=6)
-        chis = list(range(chi + 1))
-        eps = 1e-5
-        U, S, V, rel_err = T_orig.svd(
-            i_list, i_list_compl, chis=chis, eps=eps, return_rel_err=True
-        )
-        check_internal_consistency(U)
-        check_internal_consistency(S)
-        check_internal_consistency(V)
-        assert rel_err < eps or sum(type(S).flatten_shape(S.shape)) == chi
-        US = U.dot(S.diag(), (len(i_list), 0))
-        USV = US.dot(V, (len(i_list), 0))
-        err = (USV - T).norm()
-        T_norm = T_orig.norm()
+        err = (USV - T.transpose(i_list + i_list_compl)).norm()
+        T_norm = T.norm()
         if T_norm != 0:
             true_rel_err = err / T_norm
         else:
             true_rel_err = 0
-        if rel_err > 1e-7 or true_rel_err > 1e-7:
-            # If this doesn't hold we run into machine epsilon because of a
-            # square root.
-            assert (
-                np.abs(rel_err - true_rel_err) / (rel_err + true_rel_err)
-                < 1e-7
-            )
-        else:
-            assert USV.allclose(T)
+        # Check that the reported error is the same as the actual error.
+        # Allow a mismatch up to 1e-7, because a square root brings machine
+        # epsilon to around 1e-8
+        assert np.abs(rel_err - true_rel_err) < 1e-7
+        # If we did not use the full bond dimension allowd, the error incurred
+        # should be smaller than eps.
+        assert rel_err <= eps or sum(type(S).flatten_shape(S.shape)) == chi
 
+        # Do the same SVD with NumPy and compare.
         U_np_svd, S_np_svd, V_np_svd, np_rel_err = svd(
             T_np,
             i_list,
@@ -558,14 +642,55 @@ def test_svd(
             eps=eps,
             return_rel_err=True,
         )
+        U_svd_np, S_svd_np, V_svd_np = (
+            U.to_ndarray(),
+            S.to_ndarray(),
+            V.to_ndarray(),
+        )
+        order = np.argsort(-S_svd_np)
+        S_svd_np = S_svd_np[order]
+        U_svd_np = U_svd_np[..., order]
+        V_svd_np = V_svd_np[order, ...]
+        # There's a gauge freedom in SVD, so find the gauge transformation that
+        # maps between U_svd_np and U_np_svd, and revert that transformation.
+        g = np.tensordot(U_svd_np.conjugate(), U_np_svd, (range(n), range(n)))
+        U_svd_np = np.tensordot(U_svd_np, g, ([-1], [0]))
+        V_svd_np = np.tensordot(g.conjugate(), V_svd_np, ([0], [0]))
+        # Check that the gauge transformation commutes with the matrix of
+        # singular values.
+        S_np_mat = np.diag(S_np_svd)
+        assert np.allclose(np.dot(g, S_np_mat), np.dot(S_np_mat, g))
+        assert np.allclose(U_np_svd, U_svd_np)
+        assert np.allclose(S_np_svd, S_svd_np)
+        assert np.allclose(V_np_svd, V_svd_np)
+        # atol=1e-7 because a square root brings machine epsilon to around 1e-8
         assert np.allclose(rel_err, np_rel_err, atol=1e-7)
-        assert np.allclose(-np.sort(-S.to_ndarray()), S_np_svd)
 
 
+@pytest.mark.parametrize("eps", [1e-15, 1e-3])
+@pytest.mark.parametrize("truncate", [True, False])
+@pytest.mark.parametrize("hermitian", [True, False])
 def test_eig(
-    n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
+    n_iters,
+    tensorclass,
+    n_qnums,
+    rshape,
+    rqhape,
+    rdirs,
+    rcharge,
+    rtensor,
+    eps,
+    truncate,
+    hermitian,
 ):
+    if truncate:
+        chi = np.random.randint(low=1, high=6)
+        chis = list(range(chi + 1))
+    else:
+        chis = None
     for iter_num in range(n_iters):
+        # Generate a tensor that is square when indices in i_list and
+        # i_list_compl are joined.
         n = np.random.randint(low=1, high=3)
         shp = rshape(n=n * 2, chilow=1, chihigh=4)
         qhp = rqhape(shape=shp)
@@ -578,153 +703,91 @@ def test_eig(
             qhp[j] = qhp[i].copy()
             dirs[j] = -1
         T = rtensor(shape=shp, qhape=qhp, dirs=dirs, charge=0)
+        if hermitian:
+            T_transpose = T.copy()
+            for i, j in zip(i_list, i_list_compl):
+                T_transpose = T_transpose.swapaxes(i, j)
+            T = T + T_transpose.conjugate()
         T_orig = T.copy()
         T_np = T.to_ndarray()
 
-        # No truncation, non-hermitian
-        S, U = T.eig(i_list, i_list_compl)
-        assert (T == T_orig).all()
-        check_internal_consistency(S)
-        check_internal_consistency(U)
-
-        S_np_eig, U_np_eig = eig(T_np, i_list, i_list_compl)
-        S_eig_np, U_eig_np = S.to_ndarray(), U.to_ndarray()
-
-        order = np.argsort(-S_eig_np)
-        S_eig_np = S_eig_np[order]
-        U_eig_np = U_eig_np[..., order]
-        order = np.argsort(-S_np_eig)
-        S_np_eig = S_np_eig[order]
-        U_np_eig = U_np_eig[..., order]
-        assert np.allclose(S_np_eig, S_eig_np)
-        assert np.allclose(np.abs(U_np_eig), np.abs(U_eig_np))
-
-        # Truncation, non-hermitian
-        chi = np.random.randint(low=1, high=6)
-        chis = list(range(chi + 1))
-        eps = 1e-5
+        # Find eigenvalues and vectors.
         S, U, rel_err = T.eig(
-            i_list, i_list_compl, chis=chis, eps=eps, return_rel_err=True
+            i_list,
+            i_list_compl,
+            eps=eps,
+            chis=chis,
+            hermitian=hermitian,
+            return_rel_err=True,
         )
         assert (T == T_orig).all()
         check_internal_consistency(S)
         check_internal_consistency(U)
+        S_eig_np, U_eig_np = S.to_ndarray(), U.to_ndarray()
 
+        # Do the same SVD with NumPy and compare.
         S_np_eig, U_np_eig, rel_err_np = eig(
             T_np,
             i_list,
             i_list_compl,
             chis=chis,
             eps=eps,
+            hermitian=hermitian,
             return_rel_err=True,
         )
-        S_eig_np, U_eig_np = S.to_ndarray(), U.to_ndarray()
-
         order = np.argsort(-S_eig_np)
         S_eig_np = S_eig_np[order]
         U_eig_np = U_eig_np[..., order]
         order = np.argsort(-S_np_eig)
         S_np_eig = S_np_eig[order]
         U_np_eig = U_np_eig[..., order]
+        # There's a gauge freedom in the decomposition (for instance, phases of
+        # eigenvectors), so find the gauge transformation that maps between
+        # U_svd_np and U_np_svd, and revert that transformation.
+        g = np.tensordot(U_eig_np.conjugate(), U_np_eig, (range(n), range(n)))
+        # We should only transform vectors within subspaces corresponding to
+        # degenerate eigenvalues, so enforce g to be 0 outside those blocks.
+        SX, SY = np.meshgrid(S_np_eig, S_np_eig)
+        degeneracy_eps = 1e-6
+        fltr = np.exp(-(abs(SX - SY) ** 2) / degeneracy_eps)
+        g = g * fltr
+        U_eig_np = np.tensordot(U_eig_np, g, ([-1], [0]))
         assert np.allclose(S_np_eig, S_eig_np)
-        assert np.allclose(np.abs(U_np_eig), np.abs(U_eig_np))
+        assert np.allclose(U_np_eig, U_eig_np)
         assert np.allclose(rel_err, rel_err_np)
+        # If we did not use the full bond dimension allowd, the error incurred
+        # should be smaller than eps.
         assert rel_err < eps or sum(type(S).flatten_shape(S.shape)) == chi
 
-        # No truncation, hermitian
-        T_ncon_list = list(range(-len(T.shape), 0))
-        T_conj_ncon_list = [i - 100 for i in T_ncon_list]
-        for counter, i in enumerate(i_list_compl):
-            T_ncon_list[i] = counter + 1
-            T_conj_ncon_list[i] = counter + 1
-
-        T = ncon((T, T.conjugate()), (T_ncon_list, T_conj_ncon_list))
-        T_orig = T.copy()
-        T_np = T.to_ndarray()
-        i_list = list(range(len(i_list_compl)))
-        i_list_compl = [len(i_list) + i for i in i_list]
-
-        S, U = T.eig(i_list, i_list_compl, hermitian=True)
-        assert (T == T_orig).all()
-        check_internal_consistency(S)
-        check_internal_consistency(U)
-
-        S_np_eig, U_np_eig = eig(T_np, i_list, i_list_compl, hermitian=True)
-        S_eig_np, U_eig_np = S.to_ndarray(), U.to_ndarray()
-
-        order = np.argsort(-S_eig_np)
-        S_eig_np = S_eig_np[order]
-        U_eig_np = U_eig_np[..., order]
-        order = np.argsort(-S_np_eig)
-        S_np_eig = S_np_eig[order]
-        U_np_eig = U_np_eig[..., order]
-        assert np.allclose(S_np_eig, S_eig_np)
-        assert np.allclose(np.abs(U_np_eig), np.abs(U_eig_np))
-
-        # Truncation, hermitian
-        chi = np.random.randint(low=1, high=6)
-        chis = list(range(chi + 1))
-        eps = 1e-5
-        S, U, rel_err = T.eig(
-            i_list,
-            i_list_compl,
-            chis=chis,
-            eps=eps,
-            hermitian=True,
-            return_rel_err=True,
-        )
-        assert (T == T_orig).all()
-        check_internal_consistency(S)
-        check_internal_consistency(U)
-
-        S_np_eig, U_np_eig, rel_err_np = eig(
-            T_np,
-            i_list,
-            i_list_compl,
-            chis=chis,
-            eps=eps,
-            hermitian=True,
-            return_rel_err=True,
-        )
-        S_eig_np, U_eig_np = S.to_ndarray(), U.to_ndarray()
-
-        order = np.argsort(-S_eig_np)
-        S_eig_np = S_eig_np[order]
-        U_eig_np = U_eig_np[..., order]
-        order = np.argsort(-S_np_eig)
-        S_np_eig = S_np_eig[order]
-        U_np_eig = U_np_eig[..., order]
-        assert np.allclose(S_np_eig, S_eig_np)
-        assert np.allclose(np.abs(U_np_eig), np.abs(U_eig_np))
-        assert np.allclose(rel_err, rel_err_np)
-        assert rel_err < eps or sum(type(S).flatten_shape(S.shape)) == chi
-
-        l = len(U.shape)
-        V_permutation = (l - 1,) + tuple(range(l - 1))
-        V = U.conjugate().transpose(V_permutation)
-        US = U.dot(S.diag(), (len(i_list), 0))
-        USV = US.dot(V, (len(i_list), 0))
-        err = (USV - T).norm()
-        T_norm = T_orig.norm()
-        if T_norm != 0:
-            true_rel_err = err / T_norm
-        else:
-            true_rel_err = 0
-        if rel_err > 1e-7 or true_rel_err > 1e-7:
-            # If this doesnt' hold we run into machine epsilon because of a
-            # square root.
-            assert (
-                np.abs(rel_err - true_rel_err) / (rel_err + true_rel_err)
-                < 1e-7
-            )
-        else:
-            assert USV.allclose(T)
+        # If the tensor was Hermitian, we should be able to reconstruct the
+        # original tensor as U*S*U^dagger.
+        if hermitian:
+            l = len(U.shape)
+            Udg_permutation = (l - 1,) + tuple(range(l - 1))
+            Udg = U.conjugate().transpose(Udg_permutation)
+            US = U.dot(S.diag(), (len(i_list), 0))
+            USUdg = US.dot(Udg, (len(i_list), 0))
+            err = (USUdg - T.transpose(i_list + i_list_compl)).norm()
+            T_norm = T.norm()
+            if T_norm != 0:
+                true_rel_err = err / T_norm
+            else:
+                true_rel_err = 0
+            # Check that the reported error is the same as the actual error.
+            # Allow a mismatch up to 1e-7, because a square root brings machine
+            # epsilon to around 1e-8
+            assert np.abs(rel_err - true_rel_err) < 1e-7
 
 
 def test_split(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Use both `split` and SVD to decompose a random tensor, and compare the
+    results.
+    """
     for iter_num in range(n_iters):
+        # Generate a random tensor with at least two indices, and a random
+        # bipartition of its indices.
         T = rtensor(nlow=2, chilow=1)
         T_orig = T.copy()
         n = np.random.randint(low=1, high=len(T.shape))
@@ -736,6 +799,8 @@ def test_split(
         np.random.shuffle(i_list)
         np.random.shuffle(i_list_compl)
 
+        # Use both SVD and `split` to decompose the tensor with a random amount
+        # of truncation, check that the results match.
         chi = np.random.randint(low=1, high=10)
         eps = 10 ** (-1 * np.random.randint(low=2, high=10))
         svd_res = T.svd(i_list, i_list_compl, chis=chi, eps=eps)
@@ -744,12 +809,9 @@ def test_split(
         check_internal_consistency(U)
         check_internal_consistency(S)
         check_internal_consistency(V)
-        US = U.dot(S.sqrt().diag(), (len(i_list), 0))
-        SV = V.dot(S.sqrt().diag(), (0, 1))
-        perm = list(range(len(SV.shape)))
-        d = perm.pop(-1)
-        perm.insert(0, d)
-        SV = SV.transpose(perm)
+        mid = S.sqrt().diag()
+        US = U.dot(mid, (len(i_list), 0))
+        SV = mid.dot(V, (1, 0))
         split_res = T.split(
             i_list, i_list_compl, chis=chi, eps=eps, return_sings=True
         )
@@ -761,13 +823,9 @@ def test_split(
 def test_norm(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Compute the Frobenius norm of a tensor, compare with NumPy."""
     for iter_num in range(n_iters):
-        # Test norm
-        shp = rshape()
-        for dim in shp:
-            if all([d == 0 for d in dim]):
-                dim[0] = 1
-        T = rtensor(shape=shp)
+        T = rtensor()
         T_np = T.to_ndarray()
         T_norm = T.norm()
         n = len(T.shape)
@@ -781,12 +839,9 @@ def test_norm(
 def test_max(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Get the maximum element of a real tensor, compare with NumPy."""
     for iter_num in range(n_iters):
-        shp = rshape()
-        for dim in shp:
-            if all([d == 0 for d in dim]):
-                dim[0] = 1
-        T = rtensor(shape=shp, cmplx=False)
+        T = rtensor(chilow=1, cmplx=False)
         T_np = T.to_ndarray()
         T_max = T.max()
         T_np_max = np.max(T_np)
@@ -796,12 +851,9 @@ def test_max(
 def test_min(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Get the minimum element of a real tensor, compare with NumPy."""
     for iter_num in range(n_iters):
-        shp = rshape()
-        for dim in shp:
-            if all([d == 0 for d in dim]):
-                dim[0] = 1
-        T = rtensor(shape=shp, cmplx=False)
+        T = rtensor(chilow=1, cmplx=False)
         T_np = T.to_ndarray()
         T_min = T.min()
         T_np_min = np.min(T_np)
@@ -811,12 +863,9 @@ def test_min(
 def test_average(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Get the average element of a real tensor, compare with NumPy."""
     for iter_num in range(n_iters):
-        shp = rshape()
-        for dim in shp:
-            if all([d == 0 for d in dim]):
-                dim[0] = 1
-        T = rtensor(shape=shp)
+        T = rtensor(chilow=1)
         T_np = T.to_ndarray()
         T_average = T.average()
         T_np_average = np.average(T_np)
@@ -826,6 +875,9 @@ def test_average(
 def test_expand_dim(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Use `expand_dim` to a give a random tensor a trivial extra index, and
+    compare the outcome with NumPy.
+    """
     for iter_num in range(n_iters):
         T = rtensor()
         T_orig = T.copy()
@@ -846,6 +898,7 @@ def test_expand_dim(
 def test_eye(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Create an identity matrix, compare with NumPy."""
     for iter_num in range(n_iters):
         dim = rshape(n=1)[0]
         qim = rqhape(shape=[dim])[0]
@@ -860,6 +913,7 @@ def test_eye(
 def test_flip_dir(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Test that flipping the direction of an index twice is a noop."""
     for iter_num in range(n_iters):
         T = rtensor(nlow=1)
         T_orig = T.copy()
@@ -874,6 +928,9 @@ def test_flip_dir(
 def test_expand_dims_product(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Test contracting over a trivial index created with `expand_dims` by
+    comparing with NumPy.
+    """
     for iter_num in range(n_iters):
         T1 = rtensor()
         T2 = rtensor()
@@ -898,8 +955,17 @@ def test_expand_dims_product(
 def test_ncon_svd_ncon(
     n_iters, tensorclass, n_qnums, rshape, rqhape, rdirs, rcharge, rtensor
 ):
+    """Create a random NCon contraction, do it, and compare to doing the same
+    contraction with `ndarrays`. If the result has more than one index, SVD it,
+    and use the SVD to compute its norm squared with another NCon contraction.
+
+    The point of this test is to mimic a typical sequence in a tensor network
+    algorithm, where decompositions and contractions follow each other.
+    """
     for iter_num in range(n_iters):
-        # Create a random ncon contraction
+        # Create random form data for a random number of tensors (at most 4),
+        # and make a set that lists all tuples of ``(i, j)`` where `i` numbers
+        # tensors and `j` numbers the indices of the `i`th tensor.
         n_tensors = np.random.randint(low=1, high=4)
         shapes = []
         qhapes = []
@@ -915,6 +981,8 @@ def test_ncon_svd_ncon(
             for j in range(len(shp)):
                 indices.add((i, j))
 
+        # Give each index of each tensor a negative number that will be its
+        # ncon contraction number if it left uncontracted.
         ncon_lists = []
         index_numbers = set(range(-len(indices), 0))
         for shp in shapes:
@@ -923,6 +991,9 @@ def test_ncon_svd_ncon(
                 ncon_list.append(index_numbers.pop())
             ncon_lists.append(ncon_list)
 
+        # Pick a random number of pairs of indices to be contracted, give them
+        # the same, positive index number, and change their form data to match
+        # so that they can be contracted with each other.
         n_contractions = np.random.randint(
             low=0, high=int(len(indices) / 2) + 1
         )
@@ -935,6 +1006,7 @@ def test_ncon_svd_ncon(
             ncon_lists[t1][i1] = counter
             ncon_lists[t2][i2] = counter
 
+        # Create the tensors according to the form data we now have.
         tensors = []
         np_tensors = []
         for shape, qhape, dirs, charge in zip(shapes, qhapes, dirss, charges):
@@ -943,6 +1015,7 @@ def test_ncon_svd_ncon(
             tensors.append(tensor)
             np_tensors.append(np_tensor)
 
+        # Do the contraction. Compare with doing it with NumPy arrays.
         T = ncon(tensors, ncon_lists)
         check_internal_consistency(T)
         np_T = ncon(np_tensors, ncon_lists)
@@ -980,6 +1053,10 @@ def test_ncon_svd_ncon(
                     [100, 101],
                     [101] + V_right_inds,
                 ),
-            )
-            norm_sq = S.norm_sq()
-            assert np.allclose(norm_sq, norm_sq_ncon.value())
+            ).value()
+            norm_sq_S = S.norm_sq()
+            norm_sq = T.norm_sq()
+            # Check that different ways of computing the norm all give the same
+            # result.
+            assert np.allclose(norm_sq, norm_sq_ncon)
+            assert np.allclose(norm_sq, norm_sq_S)
