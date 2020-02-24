@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 from ncon import ncon
-from .ndarray_svd import svd, eig
+from .ndarray_decomp import svd, eig
 from abeliantensors import Tensor
 
 # # # # # # # # # # # # # # # # # # # #
