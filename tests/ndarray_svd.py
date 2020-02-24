@@ -77,46 +77,52 @@ def svd(
 
     # Format the truncation parameters to canonical form.
     if chis is None:
-        max_dim = min(dim_a, dim_b)
+        min_dim = min(dim_a, dim_b)
         if eps > 0:
             # Try all possible chis.
-            chis = list(range(max_dim + 1))
+            chis = list(range(min_dim + 1))
         else:
-            chis = [max_dim]
+            chis = [min_dim]
     else:
-        if isinstance(chis, Iterable):
+        try:
             chis = list(chis)
-        else:
+        except TypeError:
             chis = [chis]
-        if eps == 0:
+        if eps <= 0:
             chis = [max(chis)]
         else:
             chis = sorted(chis)
 
-    # Truncate, if truncation dimensions are given.
-    s_sq = s ** 2
-    sum_all_sq = sum(s_sq)
+    sum_all_sq = sum(s ** 2)
     # Find the smallest chi for which the error is small enough.
     # If none is found, use the largest chi.
-    for chi in chis:
-        if not break_degenerate:
-            # Make sure that we don't break degenerate singular values by
-            # including one but not the other.
-            while 0 < chi < len(s_sq):
-                last_eig_in = s_sq[chi - 1]
-                last_eig_out = s_sq[chi]
-                rel_diff = np.abs(last_eig_in - last_eig_out) / last_eig_in
-                if rel_diff < degeneracy_eps:
-                    chi -= 1
-                else:
-                    break
-        sum_disc_sq = sum((s_sq)[chi:])
-        if sum_all_sq != 0:
-            rel_err_sq = sum_disc_sq / sum_all_sq
-        else:
-            rel_err_sq = 0
-        if rel_err_sq <= eps ** 2:
-            break
+    if sum(s) != 0:
+        last_out = s[0]
+        for chi in chis:
+            if not break_degenerate:
+                # Make sure that we don't break degenerate singular values
+                # by including one but not the other.
+                while 0 < chi < len(s):
+                    last_in = s[chi - 1]
+                    last_out = s[chi]
+                    rel_diff = np.abs(last_in - last_out)
+                    avg = (last_in + last_out) / 2
+                    if avg != 0:
+                        rel_diff /= avg
+                    if rel_diff < degeneracy_eps:
+                        chi -= 1
+                    else:
+                        break
+            sum_disc_sq = sum((s ** 2)[chi:])
+            if sum_all_sq != 0:
+                err = np.sqrt(sum_disc_sq / sum_all_sq)
+            else:
+                err = 0
+            if err < eps:
+                break
+    else:
+        err = 0
+        chi = min(chis)
     # Truncate
     s = s[:chi]
     U = U[:, :chi]
@@ -128,7 +134,7 @@ def svd(
     V_tens = np.reshape(V, (-1,) + shp_b)
     ret_val = U_tens, s, V_tens
     if return_rel_err:
-        ret_val = ret_val + (np.sqrt(rel_err_sq),)
+        ret_val = ret_val + (err,)
     return ret_val
 
 
@@ -209,30 +215,37 @@ def eig(
         else:
             chis = sorted(chis)
 
-    # Truncate, if truncation dimensions are given.
-    S_abs_sq = np.abs(S) ** 2
-    sum_all_abs_sq = sum(S_abs_sq)
+    S_abs = abs(S)
+    sum_all_sq = sum(S_abs ** 2)
     # Find the smallest chi for which the error is small enough.
     # If none is found, use the largest chi.
-    for chi in chis:
-        if not break_degenerate:
-            # Make sure that we don't break degenerate eigenvalues by including
-            # one but not the other.
-            while 0 < chi < len(S_abs_sq):
-                last_eig_in = S_abs_sq[chi - 1]
-                last_eig_out = S_abs_sq[chi]
-                rel_diff = np.abs(last_eig_in - last_eig_out) / last_eig_in
-                if rel_diff < degeneracy_eps:
-                    chi -= 1
-                else:
-                    break
-        sum_disc_abs_sq = sum((S_abs_sq)[chi:])
-        if sum_all_abs_sq != 0:
-            rel_err_sq = sum_disc_abs_sq / sum_all_abs_sq
-        else:
-            rel_err_sq = 0
-        if rel_err_sq <= eps ** 2:
-            break
+    if sum(S_abs) != 0:
+        last_out = S_abs[0]
+        for chi in chis:
+            if not break_degenerate:
+                # Make sure that we don't break degenerate singular values
+                # by including one but not the other.
+                while 0 < chi < len(S_abs):
+                    last_in = S_abs[chi - 1]
+                    last_out = S_abs[chi]
+                    rel_diff = np.abs(last_in - last_out)
+                    avg = (last_in + last_out) / 2
+                    if avg != 0:
+                        rel_diff /= avg
+                    if rel_diff < degeneracy_eps:
+                        chi -= 1
+                    else:
+                        break
+            sum_disc_sq = sum((S_abs ** 2)[chi:])
+            if sum_all_sq != 0:
+                err = np.sqrt(sum_disc_sq / sum_all_sq)
+            else:
+                err = 0
+            if err < eps:
+                break
+    else:
+        err = 0
+        chi = min(chis)
     # Truncate
     S = S[:chi]
     U = U[:, :chi]
@@ -241,5 +254,5 @@ def eig(
     U_tens = np.reshape(U, shp_a + (-1,))
     ret_val = S, U_tens
     if return_rel_err:
-        ret_val = ret_val + (np.sqrt(rel_err_sq),)
+        ret_val = ret_val + (err,)
     return ret_val
