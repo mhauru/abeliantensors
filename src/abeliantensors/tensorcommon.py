@@ -473,22 +473,16 @@ class TensorCommon:
             # If chis isn't provided, it should be either the full list of
             # possible dimensions, if eps > 0, or just the full dimension, if
             # eps <= 0.
-            min_dim = (
-                min(
-                    type(self).flatten_dim(self.shape[i])
-                    for i in range(len(self.shape))
-                )
-                + 1
-            )
+            min_dim = min(type(self).flatten_dim(dim) for dim in self.shape)
             if eps > 0:
-                chis = tuple(range(min_dim))
+                chis = list(range(min_dim + 1))
             else:
                 chis = [min_dim]
         else:
             # Make sure chis is a list, and only includes the largest chi if
             # eps <= 0.
             try:
-                chis = tuple(chis)
+                chis = list(chis)
             except TypeError:
                 chis = [chis]
             if eps <= 0:
