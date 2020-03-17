@@ -3,11 +3,11 @@
 [![Travis status badge][travis-img]][travis-url]
 [![Codecov status badge][codecov-img]][codecov-url]
 
-abeliantensors is a Python 3 package that implements U(1) and Zn symmetry preserving
-tensors, as described by Singh et al. in
+abeliantensors is a Python 3 package that implements U(1) and ℤₙ symmetry
+preserving tensors, as described by Singh et al. in
 [arXiv: 0907.2994](https://arxiv.org/abs/0907.2994) and
-[arXiv: 1008.4774](https://arxiv.org/abs/1008.4774). abeliantensors has been designed
-for use in tensor network algorithms, and works well with the
+[arXiv: 1008.4774](https://arxiv.org/abs/1008.4774). abeliantensors has been
+designed for use in tensor network algorithms, and works well with the
 [ncon function](https://github.com/mhauru/ncon).
 
 ## Installation
@@ -25,20 +25,19 @@ pip install --user -e abeliantensors/[tests,doc]
 
 ## Usage
 
-For reference documentation see
-[here](https://abeliantensors.readthedocs.io/en/latest/).
+For reference documentation see [here][reference-url].
 
 abeliantensors exports classes `TensorU1`, `TensorZ2`, and `TensorZ3`. Other
-cyclic groups Zn can be implemented with one-liners, see the file
+cyclic groups ℤₙ can be implemented with one-liners, see the file
 `symmetrytensors.py` for examples. abeliantensors also exports a class called
-`Tensor`, that is just a wrapper around regular numpy ndarrays, but that
+`Tensor`, that is just a wrapper around regular NumPy ndarrays, but that
 implements the exact same interface as the symmetric tensor classes. This
 allows for easy switching between utilizing and not utilizing the symmetry
 preserving tensors by simply changing the class that is imported.
 
 Each symmetric tensor has, in addition to its tensor elements, the following
 pieces of what we call form data:
-* `shape` describes the dimensions of the tensors, just like with numpy arrays.
+* `shape` describes the dimensions of the tensors, just like with NumPy arrays.
   The difference is that for symmetric tensors the dimension of each index
   isn't just a number, but a list of numbers, that sets how the vector space is
   partitioned by the irreducible representations (irreps) of the symmetry. So
@@ -50,17 +49,18 @@ pieces of what we call form data:
   dimensions. Irrep charges are often also called quantum numbers, hence the q.
   In the above example `qhape=[[0,1], [0,1]]` would mark the first part of both
   the row and column space to belong to the trivial irrep of charge 0, and the
-  second part to the irrep with charge 1. For Zn the possible charges are 0, 1,
+  second part to the irrep with charge 1. For ℤₙ the possible charges are 0, 1,
   ..., n, for U(1) they are all positive and negative integers.
 * `dirs` is a list of 1s and -1s, that gives a direction to each index: either
   1 for outgoing or -1 for ingoing.
-* `charge` is an integer, the irrep charge associated to tensor. In most cases
-  you want `charge=0`, which is also the default when creating new tensors.
+* `charge` is an integer, the irrep charge associated to the tensor. In most
+  cases you want `charge=0`, which is also the default when creating new
+  tensors.
 
 Note that each element of the tensor is associated with one irrep charge for
 each of the indices. The symmetry property is then that an element can only be
 non-zero if the charges from each index, multiplied by the direction of that
-index, add up to the charge of the tensor. Addition of charges for Zn tensors
+index, add up to the charge of the tensor. Addition of charges for ℤₙ tensors
 is modulo n. For instance for a `charge=0` `TensorZ2` object this means that
 the charges on each leg must add up to an even number for an element to be
 non-zero. The whole point of this library is to store and use such symmetric
@@ -109,25 +109,25 @@ aadg = ncon((a, a.conjugate()), ([1, 2, -1, -2], [1, 2, -11, -12]))
 E, U = aadg.eig([0, 1], [2, 3], hermitian=True, eps=1e-5)
 ```
 
-There are many other user-facing methods and features, for more, see
-the [reference documentation](https://abeliantensors.readthedocs.io/en/latest/).
+There are many other user-facing methods and features, for more, see the
+[reference documentation][reference-url].
 
 ## Demo and performance
 
 The folder `demo` has an implementation of Levin and Nave's [TRG
-algorithm](https://arxiv.org/abs/cond-mat/0611687), and a script
-that runs it on the square lattice Ising model, using both symmetric tensors
-of the TensorZ2 class and dense Tensors, and compares the run times.
-Below is a plot of how long it takes to run a single TRG step at various
-bond dimensions for both of them.
+algorithm](https://arxiv.org/abs/cond-mat/0611687), and a script that runs it
+on the square lattice Ising model, using both symmetric tensors of the
+`TensorZ2` class and dense `Tensors`, and compares the run times.  Below is a
+plot of how long it takes to run a single TRG step at various bond dimensions
+for both of them.
 
 ![Running time of a single TRG step as a function of bond dimension, compared
-between using and not using symmetric tensors](demo/trg_performance.svg)
+between using and not using symmetric tensors](figs/trg_performance.svg)
 
 Note that both axes are logarithmic.
 
-At low bond dimensions the simple `Tensor` class outperforms `TensorZ2`, because
-keeping track of the symmetry structure imposes an overhead. The time
+At low bond dimensions the simple `Tensor` class outperforms `TensorZ2`,
+because keeping track of the symmetry structure imposes an overhead. The time
 complexity of the overhead is subleading as a function of bond dimension, and
 as one goes to higher bond dimensions the symmetric tensors become faster.
 Asymptotically both have the same scaling as a function of bond dimension, but
@@ -143,37 +143,42 @@ point in bond dimension will be different.
 
 ## Design and structure
 
-The implementation is built on top of numpy, and the block-wise sparse
+The implementation is built on top of NumPy. The block-wise sparse
 structure of the symmetry preserving tensors is implemented with Python
-dictionaries. Here's a quick summary of what each file does.
+dictionaries, the values of which are the NumPy `ndarray`s for the non-zero
+blocks.
 
-`tensorcommon.py`: A parent class of all the other classes, `TensorCommon`,
-that implements some higher-level features using the lower-level methods.
+Here's a class diagram for the library:
+![Class diagram](figs/classdiagram.svg)
 
-`abeliantensor.py`: All the fun is in here. Implements the class
-`AbelianTensor`, that is the parent of all the symmetric tensor classes. This
-includes implementations of various common tensor operations, such as
-contractions and decompositions, preserving and making use of the block-wise
-sparse structure these tensors have.
+The user-facing classes that one would instantiate are the ones at the bottom.
+`TensorU1`, `TensorZ2`, and `TensorZ3` implement symmetric tensors for the
+three different symmetry groups, `Tensor` is the wrapper class around NumPy
+arrays.
 
-`tensor.py`: `Tensor`, the wrapper class for numpy arrays. It is designed so that
-any call to a method of the `AbelianTensor` class is also a valid call to a
-similarly named method of the `Tensor` class. All the symmetry-related
-information is simply discarded and some underlying numpy function is called.
-Even if one doesn't use symmetry preserving tensors, the `Tensor` class provides
-some neat convenience functions, such as an easy-to-read one-liner for the
+Implementation-wise, all the fun is in `AbelianTensor`, that is the parent of
+all the symmetric tensor classes. Its methods include implementations of
+various common tensor operations, such as contractions and decompositions,
+preserving and making use of the block-wise sparse structure these tensors
+have. `TensorCommon` is a parent class of all the other classes that implements
+some higher-level features using the lower-level methods.
+
+The wrapper class `Tensor` is designed so that any call to a method of the
+`AbelianTensor` class is also a valid call to a similarly named method of the
+`Tensor` class. All the symmetry-related information is simply discarded and
+some underlying NumPy function is called.  Even if one doesn't use symmetry
+preserving tensors, the `Tensor` class provides some neat convenience
+functions, such as an easy-to-read one-liner for the
 transpose-reshape-decompose-reshape-transpose procedure for singular value and
-eigenvalue decompositions of tensors.
-
-`symmetrytensors.py`: A small file that simply creates subclasses of
-`AbelianTensor` for specific symmetry groups. If you need something other than
-Z2, Z3 and U(1), check this file to see how you could add what you need.
+eigenvalue decompositions of tensors. Note that `Tensor` is a subclass of
+NumPy's `ndarray`, so anything you can do with `ndarray`s, you can also do with
+`Tensor`s.
 
 ## Tests
 
 The `tests` folder has plenty of tests for the various classes. They can be run
-by calling `pytest`, provided abeliantensors was installed with the extras option
-`tests`.
+by calling `pytest`, provided abeliantensors was installed with the extras
+option `tests`.
 
 Most of the tests are based on generating a random instance of one of the
 "fancy" tensor classes in this package, and confirming that the following
@@ -199,6 +204,7 @@ pytest tests/test_tensors.py::test_to_and_from_ndarray --tensorclass TensorZ2 --
 ```
 
 
+[reference-url]: https://abeliantensors.readthedocs.io/en/latest/
 [travis-img]: https://travis-ci.org/mhauru/abeliantensors.svg?branch=master
 [travis-url]: https://travis-ci.org/mhauru/abeliantensors
 [codecov-img]: https://codecov.io/gh/mhauru/abeliantensors/branch/master/graph/badge.svg
