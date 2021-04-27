@@ -1939,7 +1939,7 @@ class AbelianTensor(TensorCommon):
             else:
                 if sparse and maxchi < min(v.shape) - 1:
                     if hermitian:
-                        s, u = spsla.eighs(
+                        s, u = spsla.eigsh(
                             v, k=maxchi, return_eigenvectors=True
                         )
                     else:
